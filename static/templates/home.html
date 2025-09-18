@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+   <!-- Section Fonctionnalités -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    ><div class="card feature-card h-100 text-center p-4">
+
+                        <div class="feature-icon bg-primary mx-auto">
+                            <i class="fas fa-building"></i>
+                        </div>
+                    <a href="{% url 'immeuble:list_immeuble' %}" class="btn btn-primary"> Gestion d'immeubles</a>
+                        <p class="text-muted">
+                            Organisez et suivez tous vos biens immobiliers avec photos,
+                            plans et informations détaillées.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-success mx-auto">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h5 class="fw-bold">Suivi des locataires</h5>
+                        <p class="text-muted">
+                            Base de données complète de vos locataires avec contrats,
+                            garants et historique des paiements.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-info mx-auto">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <h5 class="fw-bold">Quittances automatiques</h5>
+                        <p class="text-muted">
+                            Génération automatique de quittances PDF conformes
+                            à la législation française.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-warning mx-auto">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                        <h5 class="fw-bold">Gestion financière</h5>
+                        <p class="text-muted">
+                            Suivi des paiements, alertes de retard et tableaux
+                            de bord financiers détaillés.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-danger mx-auto">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h5 class="fw-bold">Rapports et analyses</h5>
+                        <p class="text-muted">
+                            Analyses détaillées de rentabilité et rapports
+                            personnalisables pour optimiser vos revenus.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-secondary mx-auto">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h5 class="fw-bold">Sécurité et conformité</h5>
+                        <p class="text-muted">
+                            Données sécurisées et fonctionnalités conformes
+                            aux obligations légales françaises.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+{% endblock content %}

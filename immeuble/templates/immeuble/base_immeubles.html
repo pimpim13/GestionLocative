@@ -1,0 +1,57 @@
+<!-- templates/immeubles/base_immeubles.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .immeuble-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .immeuble-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .immeuble-photo {
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 2;
+    }
+
+    .occupation-progress {
+        height: 8px;
+        border-radius: 10px;
+    }
+
+    .search-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: none;
+        border-radius: 15px;
+    }
+
+    .btn-action {
+        border-radius: 25px;
+        padding: 8px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 15px;
+        color: white;
+    }
+</style>
+{% endblock %}
