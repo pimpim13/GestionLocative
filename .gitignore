@@ -1,0 +1,43 @@
+db.sqlite3
+.idea/
+__pycache__/
+.venv/
+settings.py
+
+.env
+TestJS/
+static/plugins/fontawesome-free/
+
+# Fichiers système macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+".DS_Store"
+
+#Fichiers Python compilés
+
+"*.pyc"
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+
+# IDE
+.vscode/
+
+# Fichiers temporaires
+*.tmp
+*.bak
+*.swp
+*.swo
