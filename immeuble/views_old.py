@@ -53,14 +53,16 @@ class ImmeubleDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         immeuble = self.object
-        '''
+
+
+
         # Appartements avec leurs statistiques
         appartements = immeuble.appartements.select_related(
             'type_appartement'
         ).prefetch_related(
             'contrats__locataire'
         ).order_by('etage', 'numero')
-
+        """
         context['appartements'] = appartements
 
         # Statistiques de l'immeuble
@@ -80,7 +82,7 @@ class ImmeubleDetailView(DetailView):
             apt.contrat_actuel for apt in appartements
             if apt.contrat_actuel
         ]
-        '''
+        """
         return context
 
 

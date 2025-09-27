@@ -7,10 +7,10 @@
 
 <div class="container-fluid">
     <h3  class="h2 text-center">
-        Immeubles
+        Immeuble : {{ immeuble.nom }}
     </h3>
     <div class="row mt-4 d-flex justify-content-center">
-        <div class="col-lg-12">
+        <div class="col-lg-8">
             <table class="table">
                 <thead>
                 <tr>
@@ -18,27 +18,18 @@
                     <th scope="col">Adresse</th>
                     <th scope="col">CP</th>
                     <th scope="col">Ville</th>
-                    <th scope="col">Actions</th>
 
                 </tr>
                 </thead>
                 <tbody>
-                {% for element in immeubles %}
+                {% for element in immeuble %}
                     <tr>
                         <th scope="row">
-                            <a href="{% url 'immeuble:immeuble_detail' immeuble_id=element.pk %}">{{ element.nom }}</a>
+                            <a href="{% url 'immeuble:appartement_list' %}">{{ element.nom }}</a>
                         </th>
                         <td> {{ element.adresse }} </td>
                         <td> {{ element.code_postal }} </td>
                         <td> {{ element.ville }} </td>
-                        <td>
-                            <button type="button" class="btn btn-primary btn-sm" value="{{ element.id }}">
-                                <a class="text-light" href="{% url 'immeuble:update_immeuble' element.id %}">Modifier</a>
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" value="{{ element.id}}">
-                                <a class="text-light" href="{% url 'immeuble:delete_immeuble' element.nom %}">Supprimer</a>
-                            </button>
-                        </td>
 
                     </tr>
                 {% endfor %}
@@ -49,7 +40,6 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td></td>
                     </tr>
                 </tbody>
             </table>
@@ -57,7 +47,7 @@
                 <a class="text-light" href="{% url 'immeuble:create_immeuble' %}">Nouveau</a>
             </button>
             <button type="button" class="btn btn-success btn-sm" value="">
-                <a class="text-light" href="{% url 'home' %}">Retour</a>
+                <a class="text-light" href="{% url 'immeuble:list_immeuble' %}">Retour</a>
             </button>
         </div>
     </div>

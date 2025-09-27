@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block Title %} Creation Immeuble {% endblock Title %}
+{% block content %}
+
+<div class="container-fluid">
+    <h3  class="h2 text-center">
+        Immeubles
+    </h3>
+    <div class="row mt-4 d-flex justify-content-center">
+      <div class="col-lg-8">
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Nouvel immeuble</h5>
+                <div class="card-text">
+                    <form class="form" action="" method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <input class="btn btn-primary my-3" type="submit" value="Enregistrer">
+                    </form>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% endblock content %}
