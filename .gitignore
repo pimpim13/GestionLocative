@@ -3,6 +3,7 @@ db.sqlite3
 __pycache__/
 .venv/
 settings.py
+venv/
 
 .env
 TestJS/

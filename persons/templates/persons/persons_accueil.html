@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+   <!-- Section Fonctionnalités -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+
+                        <div class="feature-icon bg-primary mx-auto">
+                            <i class="fas fa-users"></i>
+                        </div>
+                          <a href="{% url 'persons:proprietaires_list' %}" class="btn btn-primary"> Propriétaires</a>
+                        <p class="text-muted mt-3">
+                            Gérez les propriétaires des appartements
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-success mx-auto">
+                            <i class="fas fa-users"></i>
+                        </div>
+                         <a href="{% url 'persons:locataires_list' %}" class="btn btn-success"> Locataires</a>
+                        <p class="text-muted mt-3">
+                            Gérez les locataires des appartements
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-success mx-auto">
+                            <i class="fas fa-users"></i>
+                        </div>
+                         <a href="{% url 'contrats:contrats_list' %}" class="btn btn-success"> Contrats</a>
+                        <p class="text-muted mt-3">
+                            Gérez les contrats de location des appartements
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+{% endblock content %}

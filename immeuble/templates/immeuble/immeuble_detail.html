@@ -7,7 +7,7 @@
 
 <div class="container-fluid">
     <h3  class="h2 text-center">
-        Immeuble : {{ immeuble.nom }}
+        Appartements de : {{ immeuble.nom }}
     </h3>
     <div class="row mt-4 d-flex justify-content-center">
         <div class="col-lg-8">
@@ -25,7 +25,7 @@
                 {% for element in immeuble %}
                     <tr>
                         <th scope="row">
-                            <a href="{% url 'immeuble:appartement_list' %}">{{ element.nom }}</a>
+                            <a href="{% url 'immeuble:detail_immeuble' element.id %}">{{ element.nom }}</a>
                         </th>
                         <td> {{ element.adresse }} </td>
                         <td> {{ element.code_postal }} </td>

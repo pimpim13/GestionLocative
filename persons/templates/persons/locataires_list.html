@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block Title %} Locataires {% endblock Title %}
+{% block content %}
+
+
+<div class="container-fluid">
+    <h3  class="h2 text-center">
+        Locataires
+    </h3>
+    <div class="row mt-4 d-flex justify-content-center">
+        <div class="col-lg-12">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Nom</th>
+                    <th scope="col">Prénom</th>
+                    <th scope="col">email</th>
+                    <th scope="col">Téléphone</th>
+                    <th scope="col">Actif</th>
+                    <th class="text-end" scope="col">Actions</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                {% for locataire in locat %}
+                    <tr>
+                        <td> {{ locataire.nom}} </td>
+                        <td> {{ locataire.prenom }} </td>
+                        <td> {{ locataire.email }} </td>
+                        <td> {{ locataire.telephone }} </td>
+                        <td> {{ locataire.actif}} </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-primary btn-sm" value="{{ locataire.id }}">
+                                <a class="text-light" href="{% url 'persons:locataire_update' locataire.id  %}">Modifier</a>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" value="{{ locataire.id }}">
+                                <a class="text-light" href="#">Supprimer</a>
+                            </button>
+                        </td>
+
+                    </tr>
+                {% endfor %}
+                    <tr>
+                        <th>
+
+                        </th>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-primary btn-sm" value="">
+                <a class="text-light" href="{% url 'persons:locataire_create' %}">Nouveau</a>
+            </button>
+            <button type="button" class="btn btn-success btn-sm" value="">
+                <a class="text-light" href="{% url 'persons:persons_accueil' %}">Retour</a>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}

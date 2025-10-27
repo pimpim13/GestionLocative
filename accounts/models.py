@@ -1,3 +1,6 @@
+from time import timezone
+from datetime import datetime
+
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 
@@ -71,7 +74,7 @@ class CustomUser(AbstractBaseUser):
 
 
 class TimeStampedModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=datetime.now())
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
