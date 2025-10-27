@@ -43,12 +43,18 @@ INSTALLED_APPS = [
 
     'crispy_forms',
     'crispy_bootstrap5',
+    'bootstrap_datepicker_plus',
 
     #app locales
 
     'accounts',
     'src',
     'immeuble',
+    'persons',
+    'contrats',
+
+    #app à supprimer
+    'essais',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -137,6 +143,9 @@ STATIC_ROOT = BASE_DIR
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.CustomUser'

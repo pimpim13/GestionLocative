@@ -26,7 +26,7 @@
                 {% for element in immeubles %}
                     <tr>
                         <th scope="row">
-                            <a href="{% url 'immeuble:immeuble_detail' immeuble_id=element.pk %}">{{ element.nom }}</a>
+                            <a href="{% url 'immeuble:immeuble_detail' element.id %}">{{ element.nom }}</a>
                         </th>
                         <td> {{ element.adresse }} </td>
                         <td> {{ element.code_postal }} </td>

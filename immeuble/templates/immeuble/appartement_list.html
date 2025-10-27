@@ -7,9 +7,8 @@
 
 <div class="container-fluid">
     <h3  class="h2 text-center">
-    {% if appartement  %}
-
-        Apparetements de l'immeuble : {{ immeuble.nom }}
+    {% if appartements %}
+        Appartements de {{ immeuble.nom }}
     </h3>
     <div class="row mt-4 d-flex justify-content-center">
         <div class="col-lg-8">
@@ -19,19 +18,36 @@
                     <th scope="col">Immeuble</th>
                     <th scope="col">Numéro</th>
                     <th scope="col">Étage</th>
-                    <th scope="col">Loué</th>
+                    <th scope="col">Propriétaire</th>
+                    <th class ="text-center" scope="col">Loué</th>
+                    <th class="text-end" scope="col">Actions</th>
 
                 </tr>
                 </thead>
                 <tbody>
-                {% for element in appartement %}
+                {% for element in appartements %}
                     <tr>
                         <th scope="row">
-                            <a href="">{{ element.immeuble}}</a>
+                           {{ element.immeuble}}
                         </th>
                         <td> {{ element.numero }} </td>
                         <td> {{ element.étage }} </td>
-                        <td> {{ element.loue }} </td>
+                        <td> {{ element.proprietaire}} </td>
+                        <td class="text-center">
+                            {% if element.loue %}
+                                <span class="badge bg-success">Loué</span>
+                            {% else %}
+                                <span class="badge bg-danger">Libre</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-primary btn-sm" value="{{ element.id }}">
+                                <a class="text-light" href="{%  url 'immeuble:update_appartement' element.id %}">Modifier</a>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" value="{{ element.id }}">
+                                <a class="text-light" href="{%  url 'immeuble:delete_appartement' element.id %}">Supprimer</a>
+                            </button>
+                        </td>
 
                     </tr>
                 {% endfor %}
@@ -42,6 +58,8 @@
                         <td></td>
                         <td></td>
                         <td></td>
+                        <td></td>
+                        <td></td>
                     </tr>
                 </tbody>
             </table>
@@ -49,7 +67,7 @@
         <p>Aucun appartement trouvé</p>
     {% endif %}
             <button type="button" class="btn btn-primary btn-sm" value="">
-                <a class="text-light" href="{% url 'immeuble:create_immeuble' %}">Nouveau</a>
+                <a class="text-light" href="{% url 'immeuble:create_appartement' %}">Nouveau</a>
             </button>
             <button type="button" class="btn btn-success btn-sm" value="">
                 <a class="text-light" href="{% url 'immeuble:list_immeuble' %}">Retour</a>

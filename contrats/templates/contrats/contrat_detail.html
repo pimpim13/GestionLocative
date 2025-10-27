@@ -1,0 +1,634 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Contrat {{ contrat.locataire.nom}} - Gestion Locative{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contrat-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        color: white;
+        padding: 2rem;
+    }
+    
+    .info-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .section-header {
+        border-left: 4px solid #667eea;
+        padding-left: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-badge-large {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+        border-left: 2px solid #e2e8f0;
+    }
+    
+    .timeline-item:last-child {
+        border-left: 0;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: -8px;
+        top: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+    }
+    
+    .document-card {
+        border: 2px dashed #e2e8f0;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .document-card:hover {
+        border-color: #667eea;
+        background: #f8fafc;
+    }
+    
+    .financial-summary {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'contrats:list' %}" class="text-decoration-none">
+                    <i class="fas fa-file-contract me-1"></i>Contrats
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ contrat.locataire.nom_complet }}</li>
+        </ol>
+    </nav>
+
+    <!-- En-tête du contrat -->
+    <div class="contrat-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-file-contract fa-2x me-3"></i>
+                    <div>
+                        <h1 class="h2 mb-0">Contrat de location</h1>
+                        <p class="mb-0 opacity-75">
+                            N° {{ contrat.id }} - Créé le {{ contrat.created_at|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="status-badge-large badge bg-{% if contrat.actif %}success{% else %}danger{% endif %}">
+                        <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>
+                        {% if contrat.actif %}Actif{% else %}Terminé{% endif %}
+                    </span>
+                    {% if contrat.preavis_donne %}
+                    <span class="status-badge-large badge bg-warning text-dark ms-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Préavis donné
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="btn-group" role="group">
+                    {% if perms.contrats.change_contrat %}
+                    <a href="{% url 'contrats:update' contrat.pk %}" class="btn btn-light">
+                        <i class="fas fa-edit me-1"></i>Modifier
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-light" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Imprimer
+                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Exporter PDF</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Envoyer par email</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% if contrat.actif %}
+                            <li><a class="dropdown-item text-warning" href="#" data-bs-toggle="modal" data-bs-target="#preavisModal"><i class="fas fa-bell me-2"></i>Donner préavis</a></li>
+                            <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#terminateModal"><i class="fas fa-times-circle me-2"></i>Résilier</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne principale -->
+        <div class="col-lg-8">
+            <!-- Informations du locataire -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <div class="section-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user text-primary me-2"></i>
+                            Locataire
+                        </h5>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                    {% if contrat.locataire.photo %}
+                                    <img src="{{ contrat.locataire.photo.url }}" 
+                                         class="rounded-circle" 
+                                         width="60" height="60"
+                                         alt="{{ contrat.locataire.nom_complet }}">
+                                    {% else %}
+                                    <i class="fas fa-user fa-2x text-primary"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'locataires:detail' contrat.locataire.pk %}" 
+                                           class="text-decoration-none">
+                                            {{ contrat.locataire.nom_complet }}
+                                        </a>
+                                    </h6>
+                                    <p class="text-muted small mb-1">
+                                        <i class="fas fa-envelope me-1"></i>
+                                        {{ contrat.locataire.email }}
+                                    </p>
+                                    <p class="text-muted small mb-0">
+                                        <i class="fas fa-phone me-1"></i>
+                                        {{ contrat.locataire.telephone }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {% if contrat.locataire.profession %}
+                            <div class="mb-2">
+                                <label class="text-muted small mb-1">Profession</label>
+                                <p class="mb-0">{{ contrat.locataire.profession }}</p>
+                            </div>
+                            {% endif %}
+                            {% if contrat.locataire.revenus_mensuels %}
+                            <div class="mb-2">
+                                <label class="text-muted small mb-1">Revenus mensuels</label>
+                                <p class="mb-0 fw-semibold">{{ contrat.locataire.revenus_mensuels|floatformat:2 }} €</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations du logement -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <div class="section-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-home text-success me-2"></i>
+                            Logement
+                        </h5>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small mb-1">Adresse</label>
+                                <p class="mb-0">
+                                    <a href="{% url 'immeubles:appartement_detail' contrat.appartement.pk %}" 
+                                       class="text-decoration-none">
+                                        <strong>Appartement {{ contrat.appartement.numero }}</strong>
+                                    </a>
+                                </p>
+                                <p class="mb-0">{{ contrat.appartement.immeuble.nom }}</p>
+                                <p class="mb-0">{{ contrat.appartement.immeuble.adresse }}</p>
+                                <p class="mb-0">{{ contrat.appartement.immeuble.code_postal }} {{ contrat.appartement.immeuble.ville }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="text-muted small mb-1">Étage</label>
+                                    <p class="mb-0 fw-semibold">{{ contrat.appartement.etage }}</p>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="text-muted small mb-1">Surface</label>
+                                    <p class="mb-0 fw-semibold">{{ contrat.appartement.surface }} m²</p>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="text-muted small mb-1">Type</label>
+                                    <p class="mb-0 fw-semibold">
+                                        {% if contrat.appartement.type_appartement %}
+                                        {{ contrat.appartement.type_appartement.nom }}
+                                        {% else %}
+                                        {{ contrat.appartement.nb_pieces }} pièces
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="text-muted small mb-1">Équipements</label>
+                                    <p class="mb-0">
+                                        {% if contrat.appartement.balcon %}<i class="fas fa-check text-success" title="Balcon"></i>{% endif %}
+                                        {% if contrat.appartement.terrasse %}<i class="fas fa-check text-success" title="Terrasse"></i>{% endif %}
+                                        {% if contrat.appartement.cave %}<i class="fas fa-check text-success" title="Cave"></i>{% endif %}
+                                        {% if contrat.appartement.parking %}<i class="fas fa-check text-success" title="Parking"></i>{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditions financières -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <div class="section-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-euro-sign text-warning me-2"></i>
+                            Conditions financières
+                        </h5>
+                    </div>
+                    
+                    <div class="financial-summary mb-3">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="mb-2">
+                                    <i class="fas fa-home fa-2x text-primary mb-2"></i>
+                                    <div class="h4 mb-0">{{ contrat.loyer_mensuel|floatformat:2 }} €</div>
+                                    <small class="text-muted">Loyer hors charges</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="mb-2">
+                                    <i class="fas fa-plus fa-2x text-muted mb-2"></i>
+                                    <div class="h4 mb-0">{{ contrat.charges_mensuelles|floatformat:2 }} €</div>
+                                    <small class="text-muted">Charges</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="mb-2">
+                                    <i class="fas fa-equals fa-2x text-success mb-2"></i>
+                                    <div class="h4 mb-0 text-success">{{ contrat.loyer_total|floatformat:2 }} €</div>
+                                    <small class="text-muted">Total mensuel</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small mb-1">Dépôt de garantie</label>
+                                <p class="mb-0 fw-semibold">{{ contrat.depot_garantie|floatformat:2 }} €</p>
+                                <small class="text-muted">
+                                    ({{ contrat.depot_garantie|floatformat:0|mul:1|div:contrat.loyer_mensuel|floatformat:1 }} mois de loyer)
+                                </small>
+                            </div>
+                        </div>
+                        {% if contrat.indice_reference %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small mb-1">Indice de référence IRL</label>
+                                <p class="mb-0 fw-semibold">{{ contrat.indice_reference|floatformat:2 }}</p>
+                                {% if contrat.date_revision %}
+                                <small class="text-muted">Révision annuelle le {{ contrat.date_revision|date:"d/m" }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Revenus annuels :</strong> {{ contrat.loyer_total|mul:12|floatformat:2 }} €
+                        {% if contrat.duree_mois %}
+                        | <strong>Durée du bail :</strong> {{ contrat.duree_mois }} mois
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <div class="section-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-folder text-info me-2"></i>
+                            Documents
+                        </h5>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="document-card">
+                                {% if contrat.fichier_contrat %}
+                                <a href="{{ contrat.fichier_contrat.url }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
+                                    <p class="mb-0 small fw-semibold">Contrat de bail</p>
+                                    <small class="text-muted">Télécharger</small>
+                                </a>
+                                {% else %}
+                                <i class="fas fa-file-pdf fa-3x text-muted mb-2 opacity-25"></i>
+                                <p class="mb-0 small text-muted">Contrat de bail</p>
+                                <button class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-upload me-1"></i>Ajouter
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="document-card">
+                                {% if contrat.etat_lieux_entree %}
+                                <a href="{{ contrat.etat_lieux_entree.url }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-file-alt fa-3x text-success mb-2"></i>
+                                    <p class="mb-0 small fw-semibold">État des lieux entrée</p>
+                                    <small class="text-muted">Télécharger</small>
+                                </a>
+                                {% else %}
+                                <i class="fas fa-file-alt fa-3x text-muted mb-2 opacity-25"></i>
+                                <p class="mb-0 small text-muted">État des lieux entrée</p>
+                                <button class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-upload me-1"></i>Ajouter
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="document-card">
+                                {% if contrat.etat_lieux_sortie %}
+                                <a href="{{ contrat.etat_lieux_sortie.url }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-file-alt fa-3x text-warning mb-2"></i>
+                                    <p class="mb-0 small fw-semibold">État des lieux sortie</p>
+                                    <small class="text-muted">Télécharger</small>
+                                </a>
+                                {% else %}
+                                <i class="fas fa-file-alt fa-3x text-muted mb-2 opacity-25"></i>
+                                <p class="mb-0 small text-muted">État des lieux sortie</p>
+                                {% if not contrat.actif %}
+                                <button class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-upload me-1"></i>Ajouter
+                                </button>
+                                {% else %}
+                                <small class="text-muted">Disponible à la sortie</small>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if contrat.notes %}
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <div class="section-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note text-secondary me-2"></i>
+                            Notes
+                        </h5>
+                    </div>
+                    <p class="mb-0">{{ contrat.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <!-- Timeline du contrat -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                        Chronologie
+                    </h6>
+                    
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div>
+                                <strong>Début du bail</strong>
+                                <p class="text-muted small mb-0">{{ contrat.date_debut|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if contrat.preavis_donne %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: #ffc107;"></div>
+                            <div>
+                                <strong>Préavis donné</strong>
+                                <p class="text-muted small mb-0">{{ contrat.date_preavis|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if contrat.date_fin %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: {% if contrat.actif %}#6c757d{% else %}#dc3545{% endif %};"></div>
+                            <div>
+                                <strong>Fin {% if not contrat.actif %}effective{% else %}prévue{% endif %}</strong>
+                                <p class="text-muted small mb-0">
+                                    {% if contrat.date_fin_effective %}
+                                    {{ contrat.date_fin_effective|date:"d/m/Y" }}
+                                    {% else %}
+                                    {{ contrat.date_fin|date:"d/m/Y" }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if contrat.date_revision %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: #17a2b8;"></div>
+                            <div>
+                                <strong>Prochaine révision</strong>
+                                <p class="text-muted small mb-0">{{ contrat.date_revision|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if contrat.duree_mois %}
+                    <div class="alert alert-light mt-3 mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        <strong>Durée totale :</strong> {{ contrat.duree_mois }} mois
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        Actions rapides
+                    </h6>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-invoice me-2"></i>Générer quittance
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-money-bill-wave me-2"></i>Enregistrer paiement
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-envelope me-2"></i>Contacter locataire
+                        </a>
+                        {% if contrat.actif %}
+                        <a href="#" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#preavisModal">
+                            <i class="fas fa-bell me-2"></i>Donner préavis
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paiements récents -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="fas fa-history text-success me-2"></i>
+                        Paiements récents
+                    </h6>
+                    
+                    {% if paiements_recents %}
+                    <div class="list-group list-group-flush">
+                        {% for paiement in paiements_recents %}
+                        <div class="list-group-item px-0 border-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ paiement.mois|date:"F Y" }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ paiement.date_paiement|date:"d/m/Y" }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-success">{{ paiement.total|floatformat:2 }} €</strong>
+                                    <br>
+                                    <small class="badge bg-{% if paiement.en_retard %}danger{% else %}success{% endif %}">
+                                        {% if paiement.en_retard %}Retard{% else %}À temps{% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center small">Aucun paiement enregistré</p>
+                    {% endif %}
+                    
+                    <a href="#" class="btn btn-sm btn-outline-secondary w-100 mt-3">
+                        Voir tous les paiements
+                    </a>
+                </div>
+            </div>
+
+            <!-- Informations système -->
+            <div class="card info-card">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle text-secondary me-2"></i>
+                        Informations
+                    </h6>
+                    
+                    <div class="small">
+                        <p class="mb-2">
+                            <i class="fas fa-calendar-plus text-muted me-2"></i>
+                            <strong>Créé le :</strong> {{ contrat.created_at|date:"d/m/Y à H:i" }}
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-calendar-check text-muted me-2"></i>
+                            <strong>Modifié le :</strong> {{ contrat.updated_at|date:"d/m/Y à H:i" }}
+                        </p>
+                        {% if contrat.created_by %}
+                        <p class="mb-0">
+                            <i class="fas fa-user text-muted me-2"></i>
+                            <strong>Par :</strong> {{ contrat.created_by.get_full_name }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Préavis -->
+<div class="modal fade" id="preavisModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 15px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-bell text-warning me-2"></i>
+                    Donner un préavis
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="#">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="datePreavis" class="form-label">Date du préavis</label>
+                        <input type="date" class="form-control" id="datePreavis" name="date_preavis" required>
+                        <div class="form-text">
+                            La date d'effet du préavis. Le bail prendra fin 3 mois après cette date.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notesPreavis" class="form-label">Motif (optionnel)</label>
+                        <textarea class="form-control" id="notesPreavis" name="notes" rows="3"></textarea>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Cette action notifiera le préavis dans le système mais ne terminera pas automatiquement le contrat.
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-bell me-1"></i>Confirmer le préavis
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Résiliation -->
+<div class="modal fade" id="Résiliation" tabindex="-1">
+    <p>En construction</p>
+</div>
