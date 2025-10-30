@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+   <!-- Section Fonctionnalités -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+
+                        <div class="feature-icon bg-primary mx-auto">
+                            <i class="fas fa-users"></i>
+                        </div>
+                          <a href="{% url 'paiements:paiements_contrats_list' %}" class="btn btn-primary"> Loyers </a>
+                        <p class="text-muted mt-3">
+                            Gérez les loyers de vos appartements
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-6">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="feature-icon bg-success mx-auto">
+                            <i class="fas fa-users"></i>
+                        </div>
+                         <a href="{% url 'paiements:paiements_contrats_list' %}" class="btn btn-success"> Charges </a>
+                        <p class="text-muted mt-3">
+                            Gérez les dépenses d'immeubles
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+{% endblock content %}

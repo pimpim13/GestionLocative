@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'immeuble',
     'persons',
     'contrats',
+    'paiements',
 
     #app à supprimer
     'essais',
