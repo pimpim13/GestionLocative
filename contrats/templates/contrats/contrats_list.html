@@ -34,7 +34,13 @@
                         <td> {{ contrat.locataire }} </td>
                         <td> {{ contrat.loyer_mensuel }} </td>
                         <td> {{ contrat.charges_mensuelles }} </td>
-                        <td> {{ contrat.actif }} </td>
+                        <td>
+                            {% if contrat.actif %}
+                                <i class="fa fa-check-circle" style="color: green;"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle" style="color: red;"></i>
+                            {% endif %}
+                        </td>
                         <td class="text-end">
                             <button type="button" class="btn btn-primary btn-sm" value="{{ contrat.id }}">
                                 <a class="text-light" href="{% url 'contrats:contrat_update' contrat.id  %}">Modifier</a>
