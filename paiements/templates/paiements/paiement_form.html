@@ -44,14 +44,17 @@
 
         </div>
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 {{ form.mode_paiement|as_crispy_field }}
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 {{ form.reference|as_crispy_field }}
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 {{ form.statut|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ form.valide|as_crispy_field }}
             </div>
 
         </div>
