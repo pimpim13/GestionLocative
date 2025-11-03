@@ -30,7 +30,13 @@
                         <td> {{ locataire.prenom }} </td>
                         <td> {{ locataire.email }} </td>
                         <td> {{ locataire.telephone }} </td>
-                        <td> {{ locataire.actif}} </td>
+                        <td> 
+                            {% if locataire.actif %}
+                                <i class="fa fa-check-circle" style="color: green;"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle" style="color: red;"></i>
+                            {% endif %}
+                        </td>
                         <td class="text-end">
                             <button type="button" class="btn btn-primary btn-sm" value="{{ locataire.id }}">
                                 <a class="text-light" href="{% url 'persons:locataire_update' locataire.id  %}">Modifier</a>

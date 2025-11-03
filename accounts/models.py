@@ -3,6 +3,8 @@ from datetime import datetime
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
+
 
 class myUserManager(BaseUserManager):
     def create_user(self, email, password=None):
@@ -75,7 +77,8 @@ class CustomUser(AbstractBaseUser):
 
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(default=datetime.now())
+    # created_at = models.DateTimeField(default= django.utils.timezone.now)
+    # updated_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     class Meta:
         abstract = True

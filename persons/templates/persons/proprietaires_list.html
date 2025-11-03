@@ -32,7 +32,16 @@
                         <td> {{ proprietaire.prenom }} </td>
                         <td> {{ proprietaire.email }} </td>
                         <td> {{ proprietaire.telephone }} </td>
-                        <td> {{ proprietaire.actif}} </td>
+
+                        <td> 
+                            {% if proprietaire.actif %}
+                                <i class="fa fa-check-circle" style="color: green;"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle" style="color: red;"></i>
+                            {% endif %}
+                        </td>
+                        
+                        
                         <td>
                             <button type="button" class="btn btn-primary btn-sm" value="{{ proprietaire.id }}">
                                 <a class="text-light" href="{% url 'persons:proprietaire_update' proprietaire.id %}">Modifier</a>

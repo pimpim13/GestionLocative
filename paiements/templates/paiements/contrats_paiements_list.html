@@ -16,8 +16,8 @@
                 <tr>
                     <th scope="col">Appartement</th>
                     <th scope="col">Locataire</th>
-                    <th scope="col">Loyer mensuel</th>
-                    <th scope="col">Charges mensuelles</th>
+                    <th scope="col" class="text-end">Loyer mensuel</th>
+                    <th scope="col" class="text-end">Charges mensuelles</th>
                     <th scope="col">Actif</th>
                     <th class="text-end" scope="col">Actions</th>
 
@@ -28,9 +28,15 @@
                     <tr>
                         <td> {{ contrat.appartement }} </td>
                         <td> {{ contrat.locataire }} </td>
-                        <td> {{ contrat.loyer_mensuel }} </td>
-                        <td> {{ contrat.charges_mensuelles }} </td>
-                        <td> {{ contrat.actif }} </td>
+                        <td class="text-end"> {{ contrat.loyer_mensuel }} </td>
+                        <td class="text-end"> {{ contrat.charges_mensuelles }} </td>
+                        <td>
+                            {% if contrat.actif %}
+                                <i class="fa fa-check-circle" style="color: green;"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle" style="color: red;"></i>
+                            {% endif %}    
+                        </td>
                         <td class="text-end">
                             <button type="button" class="btn btn-primary btn-sm" value="{{ contrat.id }}">
                                 <a class="text-light" href="{% url 'paiements:paiements_locataires_list' contrat.id  %}">Voir</a>

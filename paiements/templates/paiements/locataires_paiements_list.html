@@ -7,7 +7,7 @@
 
 <div class="container-fluid">
     <h3  class="h2 text-center">
-        Paiements
+        Paiements de {{ paiements.contrat.locataire.nom_complet }}
     </h3>
     <div class="row mt-4 d-flex justify-content-center">
         <div class="col-lg-12">
@@ -16,8 +16,8 @@
                 <tr>
                     <th scope="col">Mois Concerné</th>
                     <th scope="col">Date Paiement</th>
-                    <th scope="col">Loyer reçu</th>
-                    <th scope="col">Charges reçues</th>
+                    <th scope="col" >Loyer reçu</th>
+                    <th scope="col">Charges</th>
                     <th scope="col">Statut</th>
                     <th scope="col">Validé</th>
 
@@ -26,12 +26,18 @@
                 <tbody>
                 {% for element in paiements %}
                     <tr>
-                        <td> {{ element.mois }} </td>
-                        <td> {{ element.date_paiement }} </td>
+                        <td> {{ element.mois|date:"m/Y" }} </td>
+                        <td> {{ element.date_paiement|date:"d/m/Y" }} </td>
                         <td> {{ element.loyer }} </td>
                         <td> {{ element.charges }} </td>
                         <td> {{ element.statut}} </td>
-                        <td> {{ element.valide}} </td>
+                        <td>
+                            {% if element.valide %}
+                                <i class="fa fa-check-circle" style="color: green;"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle" style="color: red;"></i>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
                     <tr>
