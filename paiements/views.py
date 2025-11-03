@@ -167,6 +167,17 @@ class PaiementsLocataire_List(ListView):
     def get_queryset(self):
         contrat_id = self.kwargs.get('contrat_id')
         return PaiementLocataire.objects.filter(contrat_id=contrat_id)
+    
+    def get_context_data(self, **kwargs):
+        """Ajouter des données au template"""
+        context = super().get_context_data(**kwargs)
+
+        # Ajouter le contrat au contexte pour l'afficher
+        contrat_id = self.kwargs.get('contrat_id')
+        if True:
+            context['contrat'] = get_object_or_404(Contrats, pk=contrat_id)
+            context['locataire'] = Contrats.objects.get(id=contrat_id).locataire.nom_complet
+        return context    
 
 
 
