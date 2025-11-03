@@ -28,12 +28,12 @@
                 <tbody>
                 {% for contrat in contrats %}
                     <tr>
-                        <td> {{ contrat.date_debut }} </td>
-                        <td> {{ contrat.date_fin }} </td>
+                        <td> {{ contrat.date_debut|date:"d/m/Y" }} </td>
+                        <td> {{ contrat.date_fin|date:"d/m/Y" }} </td>
                         <td> {{ contrat.appartement }} </td>
                         <td> {{ contrat.locataire }} </td>
-                        <td> {{ contrat.loyer_mensuel }} </td>
-                        <td> {{ contrat.charges_mensuelles }} </td>
+                        <td class="text-end"> {{ contrat.loyer_mensuel }} </td>
+                        <td class="text-end"> {{ contrat.charges_mensuelles }} </td>
                         <td>
                             {% if contrat.actif %}
                                 <i class="fa fa-check-circle" style="color: green;"></i>
