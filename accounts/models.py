@@ -77,10 +77,8 @@ class CustomUser(AbstractBaseUser):
 
 class TimeStampedModel(models.Model):
     
-    created_at = models.DateTimeField(default=datetime.now())
-    # created_at = models.DateTimeField(default= django.utils.timezone.now)
-    # updated_at = models.DateTimeField(auto_now=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Modifié le")
     class Meta:
         abstract = True
     
