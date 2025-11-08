@@ -53,8 +53,8 @@ INSTALLED_APPS = [
     'persons',
     'contrats',
     'paiements',
-
-    #app à supprimer
+    #
+    # #app à supprimer
     'essais',
 ]
 

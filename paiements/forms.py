@@ -16,8 +16,8 @@ class PaiementLocataireForm(forms.ModelForm):
         widgets = {
             # Sélecteurs de date
             'mois': DatePickerInput(
-                format='%d/%m/%Y',
                 options={
+                    "format": '%d/%m/%Y',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -27,8 +27,8 @@ class PaiementLocataireForm(forms.ModelForm):
                 }
             ),
             'date_paiement': DatePickerInput(
-                format='%d/%m/%Y',
                 options={
+                    "format": '%d/%m/%Y',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -36,8 +36,8 @@ class PaiementLocataireForm(forms.ModelForm):
                 }
             ),
             'date_echeance': DatePickerInput(
-                format='%d/%m/%Y',
                 options={
+                    "format": '%d/%m/%Y',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -245,16 +245,16 @@ class PaiementRapideForm(forms.ModelForm):
         fields = ['mois', 'date_paiement', 'mode_paiement', 'reference']
         widgets = {
             'mois': DatePickerInput(
-                format='%d/%m/%Y',
                 options={
+                    "format": '%d/%m/%Y',
                     "locale": "fr",
                     "viewMode": "months",
                     "format": "MM/YYYY",
                 }
             ),
             'date_paiement': DatePickerInput(
-                format='%d/%m/%Y',
                 options={
+                    "format": '%d/%m/%Y',
                     "locale": "fr",
                     "showTodayButton": True,
                 }
@@ -304,8 +304,10 @@ class PaiementSearchForm(forms.Form):
     date_debut = forms.DateField(
         required=False,
         widget=DatePickerInput(
-            format='%d/%m/%Y',
-            options={"locale": "fr"}
+            options={
+                "format": '%d/%m/%Y',
+                "locale": "fr"
+            }
         ),
         label="Du"
     )
@@ -313,8 +315,10 @@ class PaiementSearchForm(forms.Form):
     date_fin = forms.DateField(
         required=False,
         widget=DatePickerInput(
-            format='%d/%m/%Y',
-            options={"locale": "fr"}
+            options={
+                "format": '%d/%m/%Y',
+                "locale": "fr"
+            }
         ),
         label="Au"
     )
@@ -325,11 +329,11 @@ class PaiementSearchForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
-    mode_paiement = forms.ChoiceField(
-        required=False,
-        choices=[('', 'Tous les modes')] + PaiementLocataire._meta.get_field('mode_paiement').choices,
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
+    # mode_paiement = forms.ChoiceField(
+    #     required=False,
+    #     choices=[('', 'Tous les modes')] + PaiementLocataire._meta.get_field('mode_paiement').choices,
+    #     widget=forms.Select(attrs={'class': 'form-select'})
+    # )
 
     en_retard = forms.BooleanField(
         required=False,
