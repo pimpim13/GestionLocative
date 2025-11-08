@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -131,6 +131,34 @@ def paiements_accueil(request):
 
 
 class PaiementCreateView(LoginRequiredMixin, CreateView):
+    model = PaiementLocataire
+    form_class = PaiementLocataireForm
+    template_name = 'paiements/paiement_form.html'
+    success_url = reverse_lazy('paiements:paiements_contrats_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['contrat_id'] = self.kwargs.get('contrat_id')
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        paiement = form.save(commit=False)
+        paiement.created_by = self.request.user
+        paiement.save()
+
+        # Afficher les warnings s'il y en a
+        for warning in form.get_warnings():
+            messages.warning(self.request, warning)
+
+        messages.success(
+            self.request,
+            f'Paiement de {paiement.total}€ enregistré avec succès'
+        )
+
+        return super().form_valid(form)
+    
+class PaiementUpdateView(LoginRequiredMixin, UpdateView):
     model = PaiementLocataire
     form_class = PaiementLocataireForm
     template_name = 'paiements/paiement_form.html'
