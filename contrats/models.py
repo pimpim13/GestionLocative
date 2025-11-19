@@ -1,10 +1,12 @@
+#contrats/models
+
 from django.db import models
 from accounts.models import TimeStampedModel
 from persons.models import Locataires
 from immeuble.models import Appartement
 from decimal import Decimal
 
-# Create your models here.
+
 class Contrats(TimeStampedModel):
     """Modèle pour les contrats de bail"""
     locataire = models.ForeignKey(

@@ -86,16 +86,16 @@
     </nav>
 
  <!-- Messages -->
- {% if messages %}
- <div class="container-fluid mt-3">
-     {% for message in messages %}
-         <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-             {{ message }}
-             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-         </div>
-     {% endfor %}
- </div>
-{% endif %}
+<!-- {% if messages %}-->
+<!-- <div class="container-fluid mt-3">-->
+<!--     {% for message in messages %}-->
+<!--         <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">-->
+<!--             {{ message }}-->
+<!--             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>-->
+<!--         </div>-->
+<!--     {% endfor %}-->
+<!-- </div>-->
+<!--{% endif %}-->
 
 
 {% block content %}
@@ -129,7 +129,7 @@
             "debug": false,
             "newestOnTop": true,
             "progressBar": true,
-            "positionClass": "toast-top-right",
+            "positionClass": "toast-bottom-right",
             "preventDuplicates": true,
             "onclick": null,
             "showDuration": "300",

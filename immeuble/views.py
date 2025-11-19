@@ -116,5 +116,4 @@ class AppartementDetailView(DetailView):
 
     def get_queryset(self):
         self.pk = self.kwargs["pk"]
-        print(self.pk)
         return Appartement.objects.filter(id=self.pk)

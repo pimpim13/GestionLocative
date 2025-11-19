@@ -41,7 +41,7 @@
                         </td>
                         <td class="text-end">
                             <button type="button" class="btn btn-primary btn-sm" value="{{ element.id }}">
-                                <a class="text-light" href="#">Modifier</a>
+                                <a class="text-light" href="{% url 'paiements:paiement_update' element.id %}">Modifier</a>
                             </button>
                             <button type="button" class="btn btn-danger btn-sm" value="{{ element.id }}">
                                 <a class="text-light" href="#">Supprimer</a>

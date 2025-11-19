@@ -17,7 +17,7 @@ class PaiementLocataireForm(forms.ModelForm):
             # Sélecteurs de date
             'mois': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -28,7 +28,7 @@ class PaiementLocataireForm(forms.ModelForm):
             ),
             'date_paiement': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -37,7 +37,7 @@ class PaiementLocataireForm(forms.ModelForm):
             ),
             'date_echeance': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -246,7 +246,7 @@ class PaiementRapideForm(forms.ModelForm):
         widgets = {
             'mois': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "viewMode": "months",
                     "format": "MM/YYYY",
@@ -254,7 +254,7 @@ class PaiementRapideForm(forms.ModelForm):
             ),
             'date_paiement': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "showTodayButton": True,
                 }
@@ -316,7 +316,7 @@ class PaiementSearchForm(forms.Form):
         required=False,
         widget=DatePickerInput(
             options={
-                "format": '%d/%m/%Y',
+                "format": 'DD-MM-YYYY',
                 "locale": "fr"
             }
         ),

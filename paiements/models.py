@@ -100,14 +100,14 @@ class PaiementLocataire(TimeStampedModel):
     )
 
     # Quittance associée
-    # quittance = models.OneToOneField(
-    #     'quittances.Quittance',
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True,
-    #     related_name='paiement_associe',
-    #     verbose_name="Quittance générée"
-    # )
+    quittance = models.OneToOneField(
+        'quittances.Quittance',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='paiement_associe',
+        verbose_name="Quittance générée"
+    )
 
     notes = models.TextField(blank=True, verbose_name="Notes")
 

@@ -1,8 +1,9 @@
+#persons/models
+
 from django.core.validators import RegexValidator
 from django.db import models
 
 from accounts.models import TimeStampedModel
-
 
 class Proprietaires(TimeStampedModel):
     raison_sociale = models.CharField(max_length=50, blank=True, verbose_name='Raison Sociale')

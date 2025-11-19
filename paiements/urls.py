@@ -1,5 +1,8 @@
+#paiments/urls.py
+
 from django.urls import path
-from .views import paiements_accueil, PaiementsContrats_list, PaiementCreateView, PaiementsLocataire_List
+from .views import paiements_accueil, PaiementsContrats_list, PaiementCreateView, PaiementsLocataire_List, \
+    PaiementUpdateView
 
 app_name = 'paiements'
 
@@ -9,4 +12,5 @@ urlpatterns = [
     path('contrats_list/', PaiementsContrats_list.as_view(), name='paiements_contrats_list'),
     path('locataire_list/<int:contrat_id>', PaiementsLocataire_List.as_view(), name='paiements_locataires_list'),
     path('create/<int:contrat_id>', PaiementCreateView.as_view(), name='paiement_create'),
+    path('update/<int:pk>', PaiementUpdateView.as_view(), name='paiement_update'),
     ]

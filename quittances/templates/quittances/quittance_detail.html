@@ -1,0 +1,249 @@
+<!-- templates/quittances/quittance_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block Title %}Quittance {{ quittance.numero }}{% endblock Title %}
+
+{% block content %}
+<div class="container-fluid">
+    <h3 class="h2 text-center mb-4">
+        Détail de la Quittance {{ quittance.numero }}
+    </h3>
+
+    <!-- Informations générales -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Informations Locataire
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Locataire:</th>
+                            <td>
+                                <a href="{% url 'quittances:detail' quittance.contrat.locataire.pk %}" class="text-decoration-none">
+                                    {{ quittance.contrat.locataire.nom_complet }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ quittance.contrat.locataire.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Téléphone:</th>
+                            <td>{{ quittance.contrat.locataire.telephone }}</td>
+                        </tr>
+                        <tr>
+                            <th>Immeuble:</th>
+                            <td>{{ quittance.contrat.appartement.immeuble.nom }}</td>
+                        </tr>
+                        <tr>
+                            <th>Appartement:</th>
+                            <td>N° {{ quittance.contrat.appartement.numero }} - Étage {{ quittance.contrat.appartement.etage }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-euro-sign me-2"></i>Détails Financiers
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Période:</th>
+                            <td><strong>{{ quittance.mois|date:"F Y" }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Loyer hors charges:</th>
+                            <td class="text-end">{{ quittance.loyer }} €</td>
+                        </tr>
+                        <tr>
+                            <th>Charges:</th>
+                            <td class="text-end">{{ quittance.charges }} €</td>
+                        </tr>
+                        <tr class="table-primary">
+                            <th>Total:</th>
+                            <td class="text-end"><strong>{{ quittance.total }} €</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Date de génération:</th>
+                            <td>{{ quittance.date_generation|date:"d/m/Y à H:i" }}</td>
+                        </tr>
+                        {% if quittance.envoyee %}
+                        <tr>
+                            <th>Envoyée le:</th>
+                            <td>
+                                {{ quittance.date_envoi|date:"d/m/Y à H:i" }}
+                                <span class="badge bg-success">{{ quittance.get_mode_envoi_display }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <th>Statut:</th>
+                            <td><span class="badge bg-warning">Non envoyée</span></td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paiement associé -->
+    {% if paiement %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>Paiement Associé
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Date de paiement:</strong><br>
+                            {{ paiement.date_paiement|date:"d/m/Y" }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Mode de paiement:</strong><br>
+                            {{ paiement.get_mode_paiement_display }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Référence:</strong><br>
+                            {{ paiement.reference|default:"N/A" }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Statut:</strong><br>
+                            <span class="badge bg-{{ paiement.statut|yesno:'success,warning' }}">
+                                {{ paiement.get_statut_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Notes -->
+    {% if quittance.notes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sticky-note me-2"></i>Notes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {{ quittance.notes|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <!-- Prévisualiser PDF -->
+                        <div class="col-md-3">
+                            <a href="{% url 'quittances:preview_pdf' quittance.pk %}"
+                               class="btn btn-info w-100"
+                               target="_blank">
+                                <i class="fas fa-eye me-2"></i>Prévisualiser PDF
+                            </a>
+                        </div>
+
+                        <!-- Télécharger PDF -->
+                        <div class="col-md-3">
+                            <a href="{% url 'quittances:download_pdf' quittance.pk %}"
+                               class="btn btn-success w-100">
+                                <i class="fas fa-download me-2"></i>Télécharger PDF
+                            </a>
+                        </div>
+
+                        <!-- Régénérer PDF -->
+                        <div class="col-md-3">
+                            <form method="post" action="{% url 'quittances:regenerer_pdf' quittance.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning w-100" onclick="return confirm('Régénérer le PDF ?')">
+                                    <i class="fas fa-sync me-2"></i>Régénérer PDF
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Modifier -->
+                        <div class="col-md-3">
+                            <a href="{% url 'quittances:update' quittance.pk %}"
+                               class="btn btn-primary w-100">
+                                <i class="fas fa-edit me-2"></i>Modifier
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Marquer comme envoyée -->
+                    {% if not quittance.envoyee %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <form method="post" action="{% url 'quittances:marquer_envoyee' quittance.pk %}" class="row g-2">
+                                {% csrf_token %}
+                                <div class="col-md-8">
+                                    <select name="mode_envoi" class="form-select" required>
+                                        <option value="">Sélectionnez le mode d'envoi</option>
+                                        <option value="email">Email</option>
+                                        <option value="courrier">Courrier postal</option>
+                                        <option value="remise_main">Remise en main propre</option>
+                                        <option value="portail">Téléchargée sur portail</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-check me-2"></i>Marquer comme envoyée
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons de navigation -->
+    <div class="row">
+        <div class="col-12">
+            <a href="{% url 'quittances:list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+            </a>
+            <a href="#" class="btn btn-outline-primary">
+                <i class="fas fa-file-contract me-2"></i>Voir le contrat
+            </a>
+            <a href="{% url 'persons:locataire_detail' quittance.contrat.locataire.id %}" class="btn btn-outline-info">
+                <i class="fas fa-user me-2"></i>Voir le locataire
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock content %}

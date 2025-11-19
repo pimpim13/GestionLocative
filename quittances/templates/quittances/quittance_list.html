@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block Title %}Quittances{% endblock Title %}
+
+{% block content %}
+<div class="container-fluid">
+    <h3 class="h2 text-center">
+        Liste des Quittances
+    </h3>
+
+    <!-- Barre de recherche et filtres -->
+    <div class="row mt-3 mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text"
+                                   name="search"
+                                   class="form-control"
+                                   placeholder="Rechercher (nom, numéro...)"
+                                   value="{{ current_filters.search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="immeuble" class="form-select">
+                                <option value="">Tous les immeubles</option>
+                                {% for immeuble in immeubles %}
+                                <option value="{{ immeuble.id }}" {% if current_filters.immeuble == immeuble.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ immeuble.nom }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="month"
+                                   name="mois"
+                                   class="form-control"
+                                   value="{{ current_filters.mois }}">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="envoyee" class="form-select">
+                                <option value="">Toutes</option>
+                                <option value="1" {% if current_filters.envoyee == "1" %}selected{% endif %}>Envoyées</option>
+                                <option value="0" {% if current_filters.envoyee == "0" %}selected{% endif %}>Non envoyées</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5>{{ stats.total }}</h5>
+                    <small>Total quittances</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5>{{ stats.envoyees }}</h5>
+                    <small>Envoyées</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5>{{ stats.non_envoyees }}</h5>
+                    <small>Non envoyées</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <a href="{% url 'quittances:generation_batch' %}" class="btn btn-success">
+                <i class="fas fa-file-pdf me-2"></i>Génération en lot
+            </a>
+            <a href="{% url 'quittances:create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nouvelle quittance
+            </a>
+        </div>
+    </div>
+
+    <!-- Tableau des quittances -->
+    <div class="row mt-4 d-flex justify-content-center">
+        <div class="col-lg-12">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Numéro</th>
+                        <th scope="col">Mois</th>
+                        <th scope="col">Locataire</th>
+                        <th scope="col">Immeuble</th>
+                        <th scope="col">Appartement</th>
+                        <th scope="col" class="text-end">Loyer</th>
+                        <th scope="col" class="text-end">Charges</th>
+                        <th scope="col" class="text-end">Total</th>
+                        <th scope="col" class="text-center">Envoyée</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for quittance in quittances %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'quittances:detail' quittance.pk %}" class="text-decoration-none">
+                                {{ quittance.numero }}
+                            </a>
+                        </td>
+                        <td>{{ quittance.mois|date:"m/Y" }}</td>
+                        <td>{{ quittance.contrat.locataire.nom_complet }}</td>
+                        <td>{{ quittance.contrat.appartement.immeuble.nom }}</td>
+                        <td>{{ quittance.contrat.appartement.numero }}</td>
+                        <td class="text-end">{{ quittance.loyer }} €</td>
+                        <td class="text-end">{{ quittance.charges }} €</td>
+                        <td class="text-end"><strong>{{ quittance.total }} €</strong></td>
+                        <td class="text-center">
+                            {% if quittance.envoyee %}
+                                <i class="fa fa-check-circle" style="color: green;" title="Envoyée le {{ quittance.date_envoi|date:'d/m/Y' }}"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle" style="color: red;" title="Non envoyée"></i>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'quittances:preview_pdf' quittance.pk %}"
+                                   class="btn btn-info btn-sm"
+                                   target="_blank"
+                                   title="Prévisualiser">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'quittances:download_pdf' quittance.pk %}"
+                                   class="btn btn-success btn-sm"
+                                   title="Télécharger">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <a href="{% url 'quittances:detail' quittance.pk %}"
+                                   class="btn btn-primary btn-sm"
+                                   title="Détails">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Aucune quittance trouvée</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Navigation des pages">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            <!-- Bouton retour -->
+            <div class="mt-3">
+                <a href="{% url 'home' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

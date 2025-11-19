@@ -1,4 +1,4 @@
-# apps/immeubles/urls.py
+# immeubles/urls.py
 from django.urls import path
 from .views import Immeuble_ListView, Immeuble_CreateView, ImmeubleDetail_ListView, AppartementListView, \
     AppartementDetailView, Immeuble_UpdateView, Appartement_CreateView, Appartement_UpdateView

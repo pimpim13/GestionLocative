@@ -1,3 +1,5 @@
+# contrats/urls.py
+
 from django.urls import path
 
 from persons.urls import urlpatterns

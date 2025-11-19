@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block Title %} Creation Contrat{% endblock Title %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-3">Créer un contrat</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-6">
+                {{ form.contrat|as_crispy_field }}
+            </div>
+            <div class="col-md-6">
+                {{ form.contrat|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                {{ form.mois|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.date_paiement|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.date_echeance|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                {{ form.loyer|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.charges|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
+                {{ form.autres|as_crispy_field }}
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                {{ form.mode_paiement|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ form.reference|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ form.statut|as_crispy_field }}
+            </div>
+            <div class="col-md-3">
+                {{ form.valide|as_crispy_field }}
+            </div>
+
+        </div>
+
+        {{ form.notes|as_crispy_field }}
+
+        <button type="submit" class="btn btn-primary my-3">
+            <i class="fas fa-save me-2"></i>Enregistrer
+        </button>
+    </form>
+</div>
+{{ form.media }}
+{% endblock %}

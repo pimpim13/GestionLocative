@@ -17,7 +17,7 @@ class ContratForm(forms.ModelForm):
         widgets = {
             'date_debut': DatePickerInput(
                 options={
-                    "format" : '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -26,7 +26,7 @@ class ContratForm(forms.ModelForm):
             ),
             'date_fin': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -34,13 +34,13 @@ class ContratForm(forms.ModelForm):
             ),
             'date_revision': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                 }
             ),
             'date_preavis': DatePickerInput(
                 options={
-                    "format": '%d/%m/%Y',
+                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                 }
             ),
