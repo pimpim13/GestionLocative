@@ -95,6 +95,8 @@ class AppartementListView(ListView):
         immeuble_id = self.request.GET.get('immeuble', '')
         if immeuble_id:
             queryset = queryset.filter(immeuble_id=immeuble_id)
+        else:
+            queryset = Appartement.objects.all()
 
         return queryset
 

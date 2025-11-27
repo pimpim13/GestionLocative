@@ -4,6 +4,8 @@ from django.urls import path, include
 
 from .views import custom_login_view, custom_logout_view, profile_view, create_user_view
 
+app_name = 'accounts'
+
 urlpatterns = [
 
     path('login/', custom_login_view, name='login'),

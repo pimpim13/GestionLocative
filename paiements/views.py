@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from django.views.generic import CreateView, ListView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -86,4 +86,11 @@ class PaiementsLocataire_List(ListView):
     def get_queryset(self):
         contrat_id = self.kwargs.get('contrat_id')
         return (PaiementLocataire.objects.filter(contrat_id=contrat_id))
+
+
+def paiement_delete_item(request, pk):
+    P =PaiementLocataire.objects.get(id=pk)
+    contrat_id = P.contrat.id
+    PaiementLocataire.objects.get(id=pk).delete()
+    return redirect('paiements:paiements_locataires_list', contrat_id=contrat_id)
 

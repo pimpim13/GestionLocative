@@ -44,6 +44,11 @@
                             <button type="button" class="btn btn-danger btn-sm" value="{{ locataire.id }}">
                                 <a class="text-light" href="#">Supprimer</a>
                             </button>
+                            <a href="{% url 'persons:locataire_detail' locataire.id %}"
+                                   class="btn btn-primary btn-sm"
+                                   title="Détails">
+                                    <i class="fas fa-info-circle"></i>
+                            </a>
                         </td>
 
                     </tr>

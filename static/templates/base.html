@@ -1,455 +1,137 @@
 <!DOCTYPE html>
-{% load static %}
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion Locative - Système de gestion immobilière</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>{% block title %}Gestion Locative{% endblock %}</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- jQuery et jQuery UI -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-
-        <!-- Toastr CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
-    
-    <style>
-        /* Personnalisation Toastr */
-        .toast-success {
-            background-color: #51A351 !important;
-        }
-        .toast-error {
-            background-color: #BD362F !important;
-        }
-        .toast-info {
-            background-color: #2F96B4 !important;
-        }
-        .toast-warning {
-            background-color: #F89406 !important;
-        }
-        
-        /* Animation personnalisée */
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .toast {
-            animation: slideInRight 0.3s ease-out;
-        }
-    </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-ui-i18n@1.13.2/jquery-ui-i18n.min.js"></script>
-    {% block extra_css %} {% endblock extra_css %}
+
+<script>
+$(document).ready(function() {
+    // Configuration pour tous les champs date
+    $('input[type="date"]').datepicker({
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '-100:+10'
+    });
+
+    // Français
+    $.datepicker.setDefaults($.datepicker.regional['fr']);
+});
+</script>
+
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="d-flex flex-column vh-100">
-    <div class="container overflow-auto">
+<body>
     <!-- Navigation -->
-
-    <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-building me-2"></i>
-                Gestion Locative
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-building"></i> Gestion Locative
             </a>
-            {% if user.is_authenticated %}
-            <div class="ms-auto">
-                <button class="btn btn-light btn-custom me-2">
-                    <a href="{% url 'logout' %}"><i class="fas fa-sign-in-alt me-1"></i> Deconnexion</a>
-                </button>
-            </div>
-            {% else %}
-            <div class="ms-auto">
-                <button class="btn btn-light btn-custom me-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-                    <i class="fas fa-sign-in-alt me-1"></i> Connexion
-                </button>
-                <button class="btn btn-light btn-custom" data-bs-toggle="modal" data-bs-target="#registerModal">
-                    <i class="fas fa-user-plus me-1"></i> Inscription
-                </button>
-            </div>
-            {% endif %}
 
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="fas fa-tachometer-alt "></i>Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-building"></i> Immeubles
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'immeuble:list_immeuble' %}">Liste des immeubles</a></li>
+                            <li><a class="dropdown-item" href="{% url 'immeuble:appartement_list' %}">Appartements</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'immeuble:create_immeuble' %}">Nouveau immeuble</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users"></i> Locataires
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'persons:locataires_list' %}">Liste des locataires</a></li>
+                            <li><a class="dropdown-item" href="{% url 'contrats:contrats_list' %}">Contrats</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'persons:locataire_create' %}">Nouveau locataire</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-euro-sign"></i> Finances
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'paiements:paiements_contrats_list' %}">Paiements</a></li>
+                            <li><a class="dropdown-item" href="{% url 'quittances:list' %}">Quittances</a></li>
+<!--                            <li><a class="dropdown-item" href="#">Charges</a></li>-->
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Mon profil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Déconnexion</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
- <!-- Messages -->
-<!-- {% if messages %}-->
-<!-- <div class="container-fluid mt-3">-->
-<!--     {% for message in messages %}-->
-<!--         <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">-->
-<!--             {{ message }}-->
-<!--             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>-->
-<!--         </div>-->
-<!--     {% endfor %}-->
-<!-- </div>-->
-<!--{% endif %}-->
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container-fluid mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-
-{% block content %}
-
-{% endblock content %}
+    <!-- Contenu principal -->
+    <main class="container-fluid py-4">
+        {% block content %}{% endblock %}
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-3">
+    <footer class="bg-light text-center text-muted py-3 mt-5">
         <div class="container">
-
-            <hr class="my-2">
-            <div class="row">
-                <div class="col-md-6">
-                    <small>&copy; 2025 Gestion Locative. Tous droits réservés.</small>
-                </div>
-            </div>
+            <small>&copy; {% now "Y" %} Gestion Locative - Système de gestion immobilière</small>
         </div>
     </footer>
 
-    <!-- jQuery (requis pour Toastr) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Toastr JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    
-    <script>
-        // Configuration globale de Toastr
-        toastr.options = {
-            "closeButton": true,
-            "debug": false,
-            "newestOnTop": true,
-            "progressBar": true,
-            "positionClass": "toast-bottom-right",
-            "preventDuplicates": true,
-            "onclick": null,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
-
-        // Afficher les messages Django avec Toastr
-        {% if messages %}
-            {% for message in messages %}
-                {% if message.tags == 'error' %}
-                    toastr.error("{{ message|escapejs }}", "Erreur");
-                {% elif message.tags == 'warning' %}
-                    toastr.warning("{{ message|escapejs }}", "Attention");
-                {% elif message.tags == 'success' %}
-                    toastr.success("{{ message|escapejs }}", "Succès");
-                {% elif message.tags == 'info' %}
-                    toastr.info("{{ message|escapejs }}", "Information");
-                {% else %}
-                    toastr.info("{{ message|escapejs }}");
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-    </script>
 
 
-    <!-- Modal Connexion -->
-    <div class="modal fade" id="loginModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="fas fa-sign-in-alt me-2 text-primary"></i>Connexion
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body px-4 py-4">
-                    <form method="post" action="{% url 'login' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="loginEmail" class="form-label fw-semibold">
-                                <i class="fas fa-envelope me-2 text-muted"></i>Adresse email
-                            </label>
-                            <input type="email" class="form-control" id="loginEmail" name="username" placeholder="votre@email.com" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="loginPassword" class="form-label fw-semibold">
-                                <i class="fas fa-lock me-2 text-muted"></i>Mot de passe
-                            </label>
-                            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="••••••••" required>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label" for="rememberMe">
-                                Se souvenir de moi
-                            </label>
-                        </div>
-                        <button type="submit" class="btn btn-primary-custom btn-custom w-100 mb-3">
-                            <i class="fas fa-sign-in-alt me-2"></i>Se connecter
-                        </button>
-                        <div class="text-center">
-                            <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal" data-bs-dismiss="modal">
-                                Mot de passe oublié ?
-                            </a>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <div class="w-100 text-center">
-                        <small class="text-muted">
-                            Pas encore de compte ?
-                            <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">
-                                S'inscrire
-                            </a>
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Inscription -->
-    <div class="modal fade" id="registerModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="fas fa-user-plus me-2 text-success"></i>Créer un compte
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body px-4 py-4">
-                    <form>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="registerFirstName" class="form-label fw-semibold">
-                                    <i class="fas fa-user me-2 text-muted"></i>Prénom
-                                </label>
-                                <input type="text" class="form-control" id="registerFirstName" placeholder="Jean" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="registerLastName" class="form-label fw-semibold">
-                                    <i class="fas fa-user me-2 text-muted"></i>Nom
-                                </label>
-                                <input type="text" class="form-control" id="registerLastName" placeholder="Dupont" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="registerEmail" class="form-label fw-semibold">
-                                <i class="fas fa-envelope me-2 text-muted"></i>Adresse email
-                            </label>
-                            <input type="email" class="form-control" id="registerEmail" placeholder="jean.dupont@email.com" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="registerPhone" class="form-label fw-semibold">
-                                    <i class="fas fa-phone me-2 text-muted"></i>Téléphone
-                                </label>
-                                <input type="tel" class="form-control" id="registerPhone" placeholder="06 12 34 56 78">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="registerFunction" class="form-label fw-semibold">
-                                    <i class="fas fa-briefcase me-2 text-muted"></i>Fonction
-                                </label>
-                                <select class="form-control" id="registerFunction" required>
-                                    <option value="">Sélectionnez...</option>
-                                    <option value="proprietaire">Propriétaire</option>
-                                    <option value="gestionnaire">Gestionnaire</option>
-                                    <option value="assistant">Assistant</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="registerPassword" class="form-label fw-semibold">
-                                    <i class="fas fa-lock me-2 text-muted"></i>Mot de passe
-                                </label>
-                                <input type="password" class="form-control" id="registerPassword" placeholder="••••••••" required>
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <label for="registerPasswordConfirm" class="form-label fw-semibold">
-                                    <i class="fas fa-lock me-2 text-muted"></i>Confirmer
-                                </label>
-                                <input type="password" class="form-control" id="registerPasswordConfirm" placeholder="••••••••" required>
-                            </div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="acceptTerms" required>
-                            <label class="form-check-label" for="acceptTerms">
-                                J'accepte les <a href="#" class="text-decoration-none">conditions d'utilisation</a>
-                                et la <a href="#" class="text-decoration-none">politique de confidentialité</a>
-                            </label>
-                        </div>
-                        <button type="submit" class="btn btn-primary-custom btn-custom w-100 mb-3">
-                            <i class="fas fa-user-plus me-2"></i>Créer mon compte
-                        </button>
-                    </form>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <div class="w-100 text-center">
-                        <small class="text-muted">
-                            Déjà un compte ?
-                            <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">
-                                Se connecter
-                            </a>
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Mot de passe oublié -->
-    <div class="modal fade" id="forgotPasswordModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">
-                        <i class="fas fa-key me-2 text-warning"></i>Mot de passe oublié
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body px-4 py-4">
-                    <p class="text-muted mb-4">
-                        Entrez votre adresse email et nous vous enverrons un lien
-                        pour réinitialiser votre mot de passe.
-                    </p>
-                    <form>
-                        <div class="mb-4">
-                            <label for="forgotEmail" class="form-label fw-semibold">
-                                <i class="fas fa-envelope me-2 text-muted"></i>Adresse email
-                            </label>
-                            <input type="email" class="form-control" id="forgotEmail" placeholder="votre@email.com" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary-custom btn-custom w-100 mb-3">
-                            <i class="fas fa-paper-plane me-2"></i>Envoyer le lien
-                        </button>
-                    </form>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <div class="w-100 text-center">
-                        <small class="text-muted">
-                            <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal">
-                                ← Retour à la connexion
-                            </a>
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
- 
-    <script>
-    $(document).ready(function() {
-        // Configuration pour tous les champs date
-        $('input[type="date"]').datepicker({
-            dateFormat: 'dd/mm/yy',
-            changeMonth: true,
-            changeYear: true,
-            yearRange: '-100:+10'
-        });
-
-        // Français
-        $.datepicker.setDefaults($.datepicker.regional['fr']);
-    });
-    </script>
-    <!-- Scripts personnalisés -->
-    <script>
-        // Animation des compteurs
-        function animateCounters() {
-            const counters = document.querySelectorAll('.stats-counter');
-            counters.forEach(counter => {
-                const target = parseInt(counter.innerText.replace(/\D/g, ''));
-                const increment = target / 100;
-                let current = 0;
-
-                const updateCounter = () => {
-                    if (current < target) {
-                        current += increment;
-                        if (counter.innerText.includes('+')) {
-                            counter.innerText = Math.ceil(current) + '+';
-                        } else if (counter.innerText.includes('%')) {
-                            counter.innerText = Math.ceil(current * 10) / 10 + '%';
-                        } else {
-                            counter.innerText = Math.ceil(current).toLocaleString();
-                        }
-                        setTimeout(updateCounter, 20);
-                    } else {
-                        counter.innerText = counter.innerText; // Valeur finale
-                    }
-                };
-
-                updateCounter();
-            });
-        }
-
-        // Observer pour déclencher l'animation des compteurs
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    animateCounters();
-                    observer.unobserve(entry.target);
-                }
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const statsSection = document.querySelector('.stats-counter').closest('section');
-            if (statsSection) {
-                observer.observe(statsSection);
-            }
-
-            // Validation des formulaires
-            const forms = document.querySelectorAll('form');
-            forms.forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    // Simulation de traitement
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Traitement...';
-                    submitBtn.disabled = true;
-
-                    setTimeout(() => {
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-
-                        // Ici vous ajouterez la logique de traitement réelle
-                        alert('Fonctionnalité à implémenter avec Django');
-                    }, 2000);
-                });
-            });
-
-            // Validation du mot de passe
-            const password = document.getElementById('registerPassword');
-            const confirmPassword = document.getElementById('registerPasswordConfirm');
-
-            if (password && confirmPassword) {
-                function validatePassword() {
-                    if (password.value !== confirmPassword.value) {
-                        confirmPassword.setCustomValidity('Les mots de passe ne correspondent pas');
-                    } else {
-                        confirmPassword.setCustomValidity('');
-                    }
-                }
-
-                password.addEventListener('input', validatePassword);
-                confirmPassword.addEventListener('input', validatePassword);
-            }
-        });
-    </script>
-    </div>
-
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

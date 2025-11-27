@@ -44,7 +44,7 @@
                                 <a class="text-light" href="{% url 'paiements:paiement_update' element.id %}">Modifier</a>
                             </button>
                             <button type="button" class="btn btn-danger btn-sm" value="{{ element.id }}">
-                                <a class="text-light" href="#">Supprimer</a>
+                                <a class="text-light" href="{% url 'paiements:paiement_delete' element.id %}">Supprimer</a>
                             </button>
                         </td>
                         

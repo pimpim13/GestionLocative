@@ -10,6 +10,73 @@ from django.utils import timezone
 from .models import Locataires
 from contrats.models import Contrats
 from paiements.models import PaiementLocataire
+from quittances.models import Quittance
+
+
+class Locataires_DetailView(DetailView):
+    model = Locataires
+    template_name = 'persons/locataire_detail.html'
+    context_object_name = 'locataire'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        locataire = self.get_object()
+
+        # Récupérer tous les contrats du locataire
+        contrats = Contrats.objects.filter(
+            locataire=locataire
+        ).select_related(
+            'appartement',
+            'appartement__immeuble'
+        ).order_by('-date_debut')
+
+        # Déterminer le contrat actuel
+        today = timezone.now().date()
+        contrat_actuel = contrats.filter(
+            actif=True,
+            date_debut__lte=today
+        ).filter(
+            Q(date_fin__isnull=True) | Q(date_fin__gte=today)
+        ).first()
+
+        # Récupérer les paiements récents (derniers 12 mois ou tous si moins)
+        paiements_recents = PaiementLocataire.objects.none()
+        if contrat_actuel:
+            paiements_recents = PaiementLocataire.objects.filter(
+                contrat__locataire=locataire
+            ).select_related(
+                'contrat',
+                'contrat__appartement',
+                'contrat__appartement__immeuble'
+            ).order_by('-mois', '-date_paiement')[:12]
+
+        # Récupérer les quittances du locataire
+        quittances_recentes = Quittance.objects.none()
+        nb_quittances = 0
+        if contrat_actuel:
+            # Toutes les quittances du locataire (tous ses contrats)
+            quittances_recentes = Quittance.objects.filter(
+                contrat__locataire=locataire
+            ).select_related(
+                'contrat',
+                'contrat__appartement',
+                'contrat__appartement__immeuble'
+            ).order_by('-mois', '-date_generation')[:12]
+
+            # Nombre total de quittances
+            nb_quittances = Quittance.objects.filter(
+                contrat__locataire=locataire
+            ).count()
+
+        context.update({
+            'contrats': contrats,
+            'contrat_actuel': contrat_actuel,
+            'paiements_recents': paiements_recents,
+            'quittances_recentes': quittances_recentes,
+            'nb_quittances': nb_quittances,
+        })
+
+        return context
 
 
 def persons_accueil(request):
@@ -60,7 +127,7 @@ class Locataires_UpdateView(UpdateView):
     success_url = reverse_lazy('persons:locataires_list')
 
 
-class Locataires_DetailView(DetailView):
+class Locataires_DetailView_old(DetailView):
     model = Locataires
     template_name = 'persons/locataire_detail.html'
     context_object_name = 'locataire'
@@ -101,6 +168,72 @@ class Locataires_DetailView(DetailView):
             'contrats': contrats,
             'contrat_actuel': contrat_actuel,
             'paiements_recents': paiements_recents,
+        })
+
+        return context
+
+
+class Locataires_DetailView(DetailView):
+    model = Locataires
+    template_name = 'persons/locataire_detail.html'
+    context_object_name = 'locataire'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        locataire = self.get_object()
+
+        # Récupérer tous les contrats du locataire
+        contrats = Contrats.objects.filter(
+            locataire=locataire
+        ).select_related(
+            'appartement',
+            'appartement__immeuble'
+        ).order_by('-date_debut')
+
+        # Déterminer le contrat actuel
+        today = timezone.now().date()
+        contrat_actuel = contrats.filter(
+            actif=True,
+            date_debut__lte=today
+        ).filter(
+            Q(date_fin__isnull=True) | Q(date_fin__gte=today)
+        ).first()
+
+        # Récupérer les paiements récents (derniers 12 mois ou tous si moins)
+        paiements_recents = PaiementLocataire.objects.none()
+        if contrat_actuel:
+            paiements_recents = PaiementLocataire.objects.filter(
+                contrat__locataire=locataire
+            ).select_related(
+                'contrat',
+                'contrat__appartement',
+                'contrat__appartement__immeuble'
+            ).order_by('-mois', '-date_paiement')[:12]
+
+        # Récupérer les quittances du locataire
+        quittances_recentes = Quittance.objects.none()
+        nb_quittances = 0
+        if contrat_actuel:
+            # Toutes les quittances du locataire (tous ses contrats)
+            quittances_recentes = Quittance.objects.filter(
+                contrat__locataire=locataire
+            ).select_related(
+                'contrat',
+                'contrat__appartement',
+                'contrat__appartement__immeuble'
+            ).order_by('-mois', '-date_generation')[:12]
+
+            # Nombre total de quittances
+            nb_quittances = Quittance.objects.filter(
+                contrat__locataire=locataire
+            ).count()
+
+        context.update({
+            'contrats': contrats,
+            'contrat_actuel': contrat_actuel,
+            'paiements_recents': paiements_recents,
+            'quittances_recentes': quittances_recentes,
+            'nb_quittances': nb_quittances,
         })
 
         return context

@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Tableau de bord - Gestion Locative{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-tachometer-alt"></i> Tableau de bord</h1>
+        <p class="text-muted">Vue d'ensemble de votre parc locatif</p>
+    </div>
+</div>
+
+<!-- Cartes de statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_immeubles }}</h4>
+                        <p class="mb-0">Immeubles</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-building fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ appartements_loues }}/{{ total_appartements }}</h4>
+                        <p class="mb-0">Appartements loués</p>
+                        <small>{{ taux_occupation }}% d'occupation</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-home fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_locataires }}</h4>
+                        <p class="mb-0">Locataires actifs</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ revenus_mois.total|floatformat:0 }}€</h4>
+                        <p class="mb-0">Revenus du mois</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-euro-sign fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques et alertes -->
+<div class="row">
+    <!-- Graphique des revenus -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Évolution des revenus (12 derniers mois)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenusChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alertes -->
+    <div class="col-md-4">
+        <!-- Paiements en retard -->
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Retards de paiement</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if paiements_retard %}
+                    <div class="list-group list-group-flush">
+                        {% for retard in paiements_retard %}
+                            <div class="list-group-item">
+                                <strong>{{ retard.contrat.locataire.nom_complet }}</strong><br>
+                                <small class="text-muted">{{ retard.contrat.appartement }}</small><br>
+                                <span class="badge bg-danger">{{ retard.jours_retard }} jour{{ retard.jours_retard|pluralize }}</span>
+                                <span class="float-end">{{ retard.montant_du }}€</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="card-body text-center text-success">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i><br>
+                        Aucun retard de paiement
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Contrats se terminant -->
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="fas fa-calendar-times"></i> Contrats se terminant</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if contrats_fin_proche %}
+                    <div class="list-group list-group-flush">
+                        {% for contrat in contrats_fin_proche %}
+                            <div class="list-group-item">
+                                <strong>{{ contrat.locataire.nom_complet }}</strong><br>
+                                <small class="text-muted">{{ contrat.appartement }}</small><br>
+                                <small>Fin: {{ contrat.date_fin }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="card-body text-center text-success">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i><br>
+                        Aucune échéance proche
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activité récente -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history"></i> Activité récente</h5>
+            </div>
+            <div class="card-body">
+                {% if activite_recente %}
+                    <div class="list-group list-group-flush">
+                        {% for activite in activite_recente %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <i class="fas fa-{% if activite.type == 'paiement' %}money-bill-wave text-success{% elif activite.type == 'quittance' %}file-pdf text-primary{% endif %}"></i>
+                                    {{ activite.description }}
+                                </div>
+                                <small class="text-muted">{{ activite.date|timesince }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aucune activité récente</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Graphique des revenus
+    const ctx = document.getElementById('revenusChart').getContext('2d');
+    const revenusData = {{ graphique_revenus|safe }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: revenusData.map(item => item.mois),
+            datasets: [{
+                label: 'Loyers',
+                data: revenusData.map(item => item.loyers),
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Charges',
+                data: revenusData.map(item => item.charges),
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '€';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+"""
+
+# =============================================================================
+# GESTION DES CHARGES ET RÉGULARISATIONS
+# =============================================================================
+
+# apps/charges/models.py
+from django.db import models
+from django.core.validators import MinValueValidator
+from apps.core.models import TimeStampedModel
+from decimal import Decimal
+
+class TypeCharge(models.Model):
+    """Types de charges (eau, électricité, etc.)"""
+    nom = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    unite = models.CharField(
+        max_length=20,
+        choices=[
+            ('forfait', 'Forfait'),
+            ('m2', 'Par m²'),
+            ('personne', 'Par personne'),
+            ('consommation', 'À la consommation'),
+        ],
+        default='forfait'
+    )
+    actif = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['nom']
+        verbose_name = "Type de charge"
+        verbose_name_plural = "Types de charges"
+    
+    def __str__(self):
+        return self.nom
+
+class Charge(TimeStampedModel):
+    """Charges d'un immeuble pour une période donnée"""
+    immeuble = models.ForeignKey(
+        'immeubles.Immeuble',
+        on_delete=models.CASCADE,
+        related_name='charges'
+    )
+    type_charge = models.ForeignKey(TypeCharge, on_delete=models.CASCADE)
+    periode_debut = models.DateField(verbose_name="Début de période")
+    periode_fin = models.DateField(verbose_name="Fin de période")
+    
+    montant_total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name="Montant total"
+    )
+    
+    # Détails de répartition
+    repartition_mode = models.CharField(
+        max_length=20,
+        choices=[
+            ('surface', 'Par surface'),
+            ('tantieme', 'Par tantièmes'),
+            ('forfait', 'Forfait par logement'),
+            ('personnalise', 'Personnalisé'),
+        ],
+        default='surface'
+    )
+    
+    facture = models.FileField(
+        upload_to='charges/factures/',
+        null=True,
+        blank=True,
+        verbose_name="Facture"
+    )
+    
+    notes = models.TextField(blank=True)
+    reparti = models.BooleanField(default=False, verbose_name="Réparti")
+    
+    class Meta:
+        ordering = ['-periode_debut']
+        verbose_name = "Charge"
+        verbose_name_plural = "Charges"
+    
+    def __str__(self):
+        return f"{self.type_charge.nom} - {self.immeuble.nom} ({self.periode_debut.strftime('%m/%Y')})"
+    
+    @property
+    def montant_par_m2(self):
+        """Calcule le montant par m² si répartition par surface"""
+        if self.repartition_mode == 'surface':
+            surface_totale = self.immeuble.appartements.aggregate(
+                total=models.Sum('surface')
+            )['total'] or 0
+            
+            if surface_totale > 0:
+                return self.montant_total / surface_totale
+        return 0
+
+class RepartitionCharge(TimeStampedModel):
+    """Répartition d'une charge par appartement"""
+    charge = models.ForeignKey(
+        Charge,
+        on_delete=models.CASCADE,
+        related_name='repartitions'
+    )
+    appartement = models.ForeignKey(
+        'immeubles.Appartement',
+        on_delete=models.CASCADE
+    )
+    
+    montant = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    
+    # Détails du calcul
+    base_calcul = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        verbose_name="Base de calcul (surface, tantièmes...)"
+    )
+    
+    coefficient = models.DecimalField(
+        max_digits=8,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        verbose_name="Coefficient appliqué"
+    )
+    
+    class Meta:
+        unique_together = ['charge', 'appartement']
+        verbose_name = "Répartition de charge"
+        verbose_name_plural = "Répartitions de charges"
+    
+    def __str__(self):
+        return f"{self.charge} - {self.appartement} : {self.montant}€"
+
+class RegularisationCharges(TimeStampedModel):
+    """Régularisation annuelle des charges pour un contrat"""
+    contrat = models.ForeignKey(
+        'locataires.Contrat',
+        on_delete=models.CASCADE,
+        related_name='regularisations'
+    )
+    
+    annee = models.PositiveIntegerField(verbose_name="Année de régularisation")
+    
+    # Montants
+    provisions_versees = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Provisions versées"
+    )
+    
+    charges_reelles = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Charges réelles"
+    )
+    
+    solde = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Solde (+ = dû par locataire, - = à rembourser)"
+    )
+    
+    # Documents
+    decompte = models.FileField(
+        upload_to='charges/regularisations/',
+        null=True,
+        blank=True,
+        verbose_name="Décompte de charges"
+    )
+    
+    date_envoi = models.DateField(null=True, blank=True)
+    solde_regle = models.BooleanField(default=False, verbose_name="Solde réglé")
+    
+    class Meta:
+        unique_together = ['contrat', 'annee']
+        ordering = ['-annee']
+        verbose_name = "Régularisation de charges"
+        verbose_name_plural = "Régularisations de charges"
+    
+    def __str__(self):
+        return f"Régularisation {self.annee} - {self.contrat.locataire.nom_complet}"
+    
+    def save(self, *args, **kwargs):
+        # Calcul automatique du solde
+        self.solde = self.charges_reelles - self.provisions_versees
+        super().save(*args, **kwargs)

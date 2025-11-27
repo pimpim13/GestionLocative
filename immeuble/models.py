@@ -1,4 +1,4 @@
-#immeubles/models
+#immeubles/models.py
 
 from django.core.validators import MinValueValidator
 from django.db import models

@@ -1,12 +1,16 @@
 from django.contrib import admin
 from django.urls import path, include
-from .views import home
+from .views import home, DashboardView
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home, name='home'),
+    path('', DashboardView.as_view(), name='home'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('dashboard/admin/', DashboardView.as_view(), name='dashboard_admin'),
+
+
 
     path('accounts/', include('accounts.urls')),
     path('immeuble/', include('immeuble.urls')),
