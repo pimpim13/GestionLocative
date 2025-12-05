@@ -4,6 +4,7 @@ from time import timezone
 from datetime import datetime
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.core.validators import RegexValidator
 from django.db import models
 from src import settings
 
@@ -43,6 +44,28 @@ class CustomUser(AbstractBaseUser):
         max_length=255,
         blank=False,
     )
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    username = models.CharField(max_length=150, blank=True)
+
+    telephone = models.CharField(
+        max_length=20,
+        blank=True,
+        validators=[RegexValidator(r'^\+?[\d\s\-\(\)]+$', 'Format de téléphone invalide')]
+    )
+    adresse = models.TextField(blank=True)
+    fonction = models.CharField(
+        max_length=50,
+        choices=[
+            ('proprietaire', 'Propriétaire'),
+            ('gestionnaire', 'Gestionnaire'),
+            ('assistant', 'Assistant'),
+        ],
+        default='gestionnaire'
+    )
+
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.fonction})"
 
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)

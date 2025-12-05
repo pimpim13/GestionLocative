@@ -159,7 +159,7 @@ class PaiementLocataire(TimeStampedModel):
     def save(self, *args, **kwargs):
         # Définir automatiquement la date d'échéance si non fournie
         if not self.date_echeance:
-            self.date_echeance = self.mois.replace(day=5)
+            self.date_echeance = self.mois.replace(day=self.contrat.jour_echeance)
 
         # Ajuster le statut selon le montant
         if self.total < self.montant_attendu:

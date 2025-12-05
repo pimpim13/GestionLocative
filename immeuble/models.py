@@ -25,7 +25,7 @@ class Immeuble(TimeStampedModel):
 
 
 class Appartement(TimeStampedModel):
-    immeuble = models.ForeignKey(Immeuble, on_delete=models.CASCADE)
+    immeuble = models.ForeignKey(Immeuble, related_name='appartements', on_delete=models.CASCADE)
     numero = models.CharField(max_length=10)
     proprietaire = models.ForeignKey(Proprietaires, blank=True, null=True, on_delete=models.SET_NULL)
     etage = models.PositiveIntegerField()

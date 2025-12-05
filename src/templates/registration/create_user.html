@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block Title %}Créer un utilisateur{% endblock Title %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h3">
+                <i class="fas fa-user-plus me-2"></i>Créer un nouvel utilisateur
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+                    <li class="breadcrumb-item"><a href="#">Utilisateurs</a></li>
+                    <li class="breadcrumb-item active">Créer</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Alerte si non admin -->
+    {% if not user.is_superuser and user.fonction != 'proprietaire' %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Accès refusé :</strong> Vous devez être administrateur pour créer des utilisateurs.
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <div class="row">
+        <!-- Formulaire principal -->
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>Informations de l'utilisateur
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Identifiants de connexion -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3 border-bottom pb-2">
+                                <i class="fas fa-lock me-2"></i>Identifiants de connexion
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.username|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.email|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.password1|as_crispy_field }}
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Minimum 8 caractères
+                                    </small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.password2|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations personnelles -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3 border-bottom pb-2">
+                                <i class="fas fa-id-card me-2"></i>Informations personnelles
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.first_name|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.last_name|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.telephone|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.fonction|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description des rôles -->
+                        <div class="mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle text-info me-2"></i>Description des fonctions
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li><strong>Propriétaire :</strong> Accès complet à toutes les fonctionnalités, peut gérer les utilisateurs</li>
+                                        <li><strong>Gestionnaire :</strong> Peut gérer les immeubles, locataires, contrats et paiements</li>
+                                        <li><strong>Assistant :</strong> Accès en lecture seule, peut enregistrer les paiements</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Messages d'erreur globaux -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Créer l'utilisateur
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Conseils de sécurité -->
+            <div class="card mt-3 border-warning">
+                <div class="card-body">
+                    <h6 class="card-title text-warning">
+                        <i class="fas fa-shield-alt me-2"></i>Conseils de sécurité
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Utilisez un mot de passe fort et unique pour chaque utilisateur</li>
+                        <li>Attribuez uniquement les permissions nécessaires selon la fonction</li>
+                        <li>Informez l'utilisateur de ses identifiants de manière sécurisée</li>
+                        <li>Encouragez le changement du mot de passe à la première connexion</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Validation du mot de passe côté client
+    document.addEventListener('DOMContentLoaded', function() {
+        const password1 = document.querySelector('input[name="password1"]');
+        const password2 = document.querySelector('input[name="password2"]');
+        const form = document.querySelector('form');
+
+        // Indicateur de force du mot de passe
+        if (password1) {
+            password1.addEventListener('input', function() {
+                const strength = checkPasswordStrength(this.value);
+                updatePasswordStrength(strength);
+            });
+        }
+
+        // Vérification que les mots de passe correspondent
+        form.addEventListener('submit', function(e) {
+            if (password1.value !== password2.value) {
+                e.preventDefault();
+                alert('Les mots de passe ne correspondent pas');
+                password2.focus();
+                return false;
+            }
+            if (password1.value.length < 8) {
+                e.preventDefault();
+                alert('Le mot de passe doit contenir au moins 8 caractères');
+                password1.focus();
+                return false;
+            }
+        });
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/\d/.test(password)) strength++;
+            if (/[^a-zA-Z\d]/.test(password)) strength++;
+            return strength;
+        }
+
+        function updatePasswordStrength(strength) {
+            // Vous pouvez ajouter un indicateur visuel ici
+            const labels = ['Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'];
+            console.log('Force du mot de passe:', labels[Math.min(strength, 4)]);
+        }
+
+        // Auto-génération du username basé sur prénom/nom
+        const firstName = document.querySelector('input[name="first_name"]');
+        const lastName = document.querySelector('input[name="last_name"]');
+        const username = document.querySelector('input[name="username"]');
+
+        if (firstName && lastName && username) {
+            const generateUsername = () => {
+                if (!username.value && firstName.value && lastName.value) {
+                    const suggestion = (firstName.value.charAt(0) + lastName.value).toLowerCase()
+                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    username.placeholder = `Suggestion: ${suggestion}`;
+                }
+            };
+
+            firstName.addEventListener('blur', generateUsername);
+            lastName.addEventListener('blur', generateUsername);
+        }
+    });
+</script>
+{% endblock %}>

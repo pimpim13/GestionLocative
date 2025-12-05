@@ -10,6 +10,10 @@ from .models import PaiementLocataire
 from .forms import PaiementLocataireForm
 from contrats.models import Contrats
 
+from django.db.models import Sum
+from django.db.models.functions import ExtractYear
+
+
 class PaiementsContrats_list(ListView):
     model = Contrats
     fields = ['raison_sociale', 'nom', 'prenom', 'email', 'telephone', 'actif']
@@ -38,6 +42,8 @@ class PaiementCreateView(LoginRequiredMixin, CreateView):
         paiement.created_by = self.request.user
         paiement.save()
 
+        from quittances.utils import QuittanceManager
+
         # Afficher les warnings s'il y en a
         for warning in form.get_warnings():
             messages.warning(self.request, warning)
@@ -46,6 +52,13 @@ class PaiementCreateView(LoginRequiredMixin, CreateView):
             self.request,
             f'Paiement de {paiement.total}€ enregistré avec succès'
         )
+
+        quittance = QuittanceManager.generer_depuis_paiement(paiement)
+        if quittance:
+            messages.success(
+                self.request,
+                f'Quittance n° {quittance.numero} enregistrée avec succès'
+            )
 
         return super().form_valid(form)
 
@@ -78,14 +91,23 @@ class PaiementsLocataire_List(ListView):
 
         # Ajouter le contrat au contexte pour l'afficher
         contrat_id = self.kwargs.get('contrat_id')
+        queryset = self.get_queryset()
+
+        totaux = queryset.annotate(annee=ExtractYear('mois')).values('annee').annotate(total_loyer=Sum('loyer')).annotate(total_charges=Sum('charges')).order_by(
+            'annee')
+        # tot_an_charges = queryset.annotate(annee=ExtractYear('mois')).values('annee').annotate(total_charges=Sum('charges')).order_by('annee')
+
         if True:
             context['contrat'] = get_object_or_404(Contrats, pk=contrat_id)
             context['locataire'] = Contrats.objects.get(id=contrat_id).locataire.nom_complet
-        return context    
+            context['totaux'] = totaux
+            # context['total_annuel_charges'] = tot_an_charges
+        return context
 
     def get_queryset(self):
         contrat_id = self.kwargs.get('contrat_id')
-        return (PaiementLocataire.objects.filter(contrat_id=contrat_id))
+        queryset = PaiementLocataire.objects.filter(contrat_id=contrat_id)
+        return queryset
 
 
 def paiement_delete_item(request, pk):

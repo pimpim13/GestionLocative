@@ -124,11 +124,12 @@ class QuittancePDFGenerator:
             proprio_email = "Email non renseigné"
 
         header_data = [
-            [proprio_nom, ""],
-            [self.immeuble.adresse, f"Quittance N° {self.quittance.numero}"],
-            [f"{self.immeuble.code_postal} {self.immeuble.ville}", f"Date: {datetime.now().strftime('%d/%m/%Y')}"],
-            [f"Tél: {proprio_tel}", ""],
-            [proprio_email, ""]
+            [proprio_nom, f"Quittance N° {self.quittance.numero}"],
+            [f"Tél: {proprio_tel}", f"Quittance N° {self.quittance.numero}"],
+            [proprio_email, f"Date: {datetime.now().strftime('%d/%m/%Y')}"],
+            [""],
+            [""],
+            [""],
         ]
 
         header_table = Table(header_data, colWidths=[10 * cm, 8 * cm])

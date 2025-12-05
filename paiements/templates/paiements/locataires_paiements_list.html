@@ -51,9 +51,10 @@
                     </tr>
                 {% endfor %}
                     <tr>
-                        <th></th>
-                        <td></td>
-                        <td></td>
+                        <th>Total</th>
+                        <td>{{ total_annuel_loyer.0.annee }}</td>
+                        <td>{{ totaux.0.total_loyer|floatformat:2}}</td>
+                        <td>{{ totaux.0.total_charges|floatformat:2}}</td>
                         <td></td>
                         <td></td>
                         <td></td>
@@ -64,6 +65,13 @@
             <button type="button" class="btn btn-success btn-sm" value="">
                 <a class="text-light" href="{% url 'paiements:paiements_contrats_list' %}">Retour</a>
             </button>
+
+            <h3>Récapitulatif annuel</h3>
+            <ul>
+                {% for element in totaux %}
+                    <li>{{ element.annee }} - Loyer : {{ element.total_loyer|floatformat:2 }} - Provision sur charges : {{ element.total_charges|floatformat:2 }}</li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </div>

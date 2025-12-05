@@ -30,6 +30,9 @@
 
         <div class="row">
             <div class="col-md-4">
+                {{ form.jour_echeance|as_crispy_field }}
+            </div>
+            <div class="col-md-4">
                 {{ form.loyer_mensuel|as_crispy_field }}
             </div>
             <div class="col-md-4">

@@ -1,81 +1,66 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load crispy_forms_tags %}
-{% block Title %} Appartements {% endblock Title %}
+
 {% block content %}
+<div class="container-fluid"
+    <h2>Liste des appartements</h2>
 
-
-<div class="container-fluid">
-    <h3  class="h2 text-center">
-    {% if appartements %}
-        Appartements de {{ immeuble.nom }}
-    </h3>
-    <div class="row mt-4 d-flex justify-content-center">
-        <div class="col-lg-12">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th scope="col">Immeuble</th>
-                    <th scope="col">Numéro</th>
-                    <th scope="col">Étage</th>
-                    <th scope="col">Propriétaire</th>
-                    <th class ="text-center" scope="col">Loué</th>
-                    <th class="text-end" scope="col">Actions</th>
-
-                </tr>
-                </thead>
-                <tbody>
-                {% for element in appartements %}
-                    <tr>
-                        <th scope="row">
-                           {{ element.immeuble}}
-                        </th>
-                        <td> {{ element.numero }} </td>
-                        <td> {{ element.étage }} </td>
-                        <td> {{ element.proprietaire}} </td>
-                        <td class="text-center">
-                            {% if element.loue %}
-                                <span class="badge bg-success">Loué</span>
-                            {% else %}
-                                <span class="badge bg-danger">Libre</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-primary btn-sm" value="{{ element.id }}">
-                                <a class="text-light" href="{%  url 'immeuble:update_appartement' element.id %}">Modifier</a>
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" value="{{ element.id }}">
-                                <a class="text-light" href="{%  url 'immeuble:delete_appartement' element.id %}">Supprimer</a>
-                            </button>
-                        </td>
-
-                    </tr>
-                {% endfor %}
-                    <tr>
-                        <th>
-
-                        </th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-    {% else %}
-        <p>Aucun appartement trouvé</p>
-    {% endif %}
-            <button type="button" class="btn btn-primary btn-sm" value="">
-                <a class="text-light" href="{% url 'immeuble:create_appartement' %}">Nouveau</a>
-            </button>
-            <button type="button" class="btn btn-success btn-sm" value="">
-                <a class="text-light" href="{% url 'immeuble:list_immeuble' %}">Retour</a>
-            </button>
+    <!-- Filtres -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Filtrer par immeuble</label>
+                        <select name="immeuble" class="form-select" onchange="this.form.submit()">
+                            <option value="">Tous les immeubles</option>
+                            {% for immeuble in immeubles %}
+                                <option value="{{ immeuble.id }}"
+                                    {% if immeuble_selected_id == immeuble.id %}selected{% endif %}>
+                                    {{ immeuble.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                </div>
+            </form>
         </div>
     </div>
 
+    <!-- Liste des appartements -->
+    {% if appartements %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Immeuble</th>
+                    <th>Numéro</th>
+                    <th>Étage</th>
+                    <th>Loué</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appartement in appartements %}
+                <tr>
+                    <td>{{ appartement.immeuble.nom }}</td>
+                    <td>{{ appartement.numero }}</td>
+                    <td>{{ appartement.etage }}</td>
+                    <td>
+                        {% if appartement.loue %}
+                            <span class="badge bg-success">Oui</span>
+                        {% else %}
+                            <span class="badge bg-warning">Non</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'immeuble:update_appartement' appartement.pk %}"
+                           class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted">Aucun appartement trouvé</p>
+    {% endif %}
 </div>
-
-
-{% endblock content %}
+{% endblock %}

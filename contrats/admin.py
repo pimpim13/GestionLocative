@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from contrats.models import Contrats
+
+
+@admin.register(Contrats)
+class Contrats(admin.ModelAdmin):
+    list_display = ['locataire', 'jour_echeance']

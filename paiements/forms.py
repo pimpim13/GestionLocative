@@ -4,6 +4,8 @@ from bootstrap_datepicker_plus.widgets import DatePickerInput
 from .models import PaiementLocataire
 from contrats.models import Contrats
 from datetime import date
+from calendar import monthrange
+
 
 class PaiementLocataireForm(forms.ModelForm):
     class Meta:
@@ -17,7 +19,6 @@ class PaiementLocataireForm(forms.ModelForm):
             # Sélecteurs de date
             'mois': DatePickerInput(
                 options={
-                    "format": 'DD-MM-YYYY',
                     "locale": "fr",
                     "showClose": True,
                     "showClear": True,
@@ -106,7 +107,7 @@ class PaiementLocataireForm(forms.ModelForm):
         # Help texts
         self.fields['mois'].help_text = "Premier jour du mois concerné (ex: 01/01/2025)"
         self.fields['date_paiement'].help_text = "Date effective de réception du paiement"
-        self.fields['date_echeance'].help_text = "Laissez vide pour le 5 du mois par défaut"
+        self.fields['date_echeance'].help_text = "Calculée automatiquement selon le contrat"
         self.fields['reference'].help_text = "Numéro de chèque, référence virement, etc."
 
         # Rendre certains champs non obligatoires
@@ -115,24 +116,54 @@ class PaiementLocataireForm(forms.ModelForm):
         self.fields['autres'].required = False
         self.fields['notes'].required = False
 
-        # Valeurs par défaut
+        # Valeurs par défaut pour création
         if not self.instance.pk:  # Si création (pas modification)
             self.fields['date_paiement'].initial = date.today()
             self.fields['valide'].initial = True
             self.fields['statut'].initial = 'recu'
             self.fields['autres'].initial = 0
 
-        # Si un contrat_id est passé, filtrer les contrats actifs
+        # ============================================================
+        # GESTION DU CONTRAT ET PRÉ-REMPLISSAGE
+        # ============================================================
         if contrat_id:
-            self.fields['contrat'].initial = contrat_id
-            self.fields['contrat'].widget.attrs['readonly'] = True
-
-            # Pré-remplir avec les montants du contrat
             try:
                 contrat = Contrats.objects.get(pk=contrat_id)
+
+                # Pré-sélectionner le contrat et le rendre readonly
+                self.fields['contrat'].initial = contrat_id
+                self.fields['contrat'].widget.attrs['readonly'] = True
+
+                # Pré-remplir les montants du contrat (uniquement en création)
                 if not self.instance.pk:
-                    self.fields['loyer'].initial = contrat.loyer_mensuel
-                    self.fields['charges'].initial = contrat.charges_mensuelles
+                    self.fields['loyer'].initial = contrat.loyer_mensuel or 0
+                    self.fields['charges'].initial = contrat.charges_mensuelles or 0
+
+                    # ============================================================
+                    # CALCUL AUTOMATIQUE DE LA DATE D'ÉCHÉANCE
+                    # ============================================================
+                    # Calculer pour le mois en cours par défaut
+                    mois_actuel = date.today().replace(day=1)
+                    jour_echeance = getattr(contrat, 'jour_echeance', 5)
+
+                    # Vérifier que le jour d'échéance existe dans le mois
+                    # (ex: éviter le 31 février)
+                    _, dernier_jour = monthrange(mois_actuel.year, mois_actuel.month)
+                    jour_echeance_valide = min(jour_echeance, dernier_jour)
+
+                    # Définir la date d'échéance calculée
+                    date_echeance_calculee = mois_actuel.replace(day=jour_echeance_valide)
+                    self.fields['date_echeance'].initial = date_echeance_calculee
+
+                    # Ajouter un attribut data pour JavaScript (optionnel)
+                    self.fields['date_echeance'].widget.attrs['data-jour-echeance'] = jour_echeance
+
+                    # Message d'aide personnalisé
+                    self.fields['date_echeance'].help_text = (
+                        f"Échéance contractuelle : le {jour_echeance} de chaque mois. "
+                        f"Modifiable si nécessaire."
+                    )
+
             except Contrats.DoesNotExist:
                 pass
 
@@ -148,6 +179,26 @@ class PaiementLocataireForm(forms.ModelForm):
             f"{obj.locataire.nom_complet} - "
             f"{obj.appartement.immeuble.nom} Apt {obj.appartement.numero}"
         )
+
+        # ============================================================
+        # GESTION POUR MODIFICATION D'UN PAIEMENT EXISTANT
+        # ============================================================
+        if self.instance.pk and self.instance.contrat:
+            # Recalculer l'échéance si elle n'est pas définie
+            if not self.instance.date_echeance and self.instance.mois:
+                contrat = self.instance.contrat
+                jour_echeance = getattr(contrat, 'jour_echeance', 5)
+
+                # Vérifier que le jour existe dans le mois du paiement
+                _, dernier_jour = monthrange(
+                    self.instance.mois.year,
+                    self.instance.mois.month
+                )
+                jour_echeance_valide = min(jour_echeance, dernier_jour)
+
+                self.fields['date_echeance'].initial = self.instance.mois.replace(
+                    day=jour_echeance_valide
+                )
 
     def clean_mois(self):
         """Validation du mois"""
@@ -175,6 +226,24 @@ class PaiementLocataireForm(forms.ModelForm):
             )
 
         return date_paiement
+
+    def clean_date_echeance(self):
+        """Validation et calcul automatique de la date d'échéance"""
+        date_echeance = self.cleaned_data.get('date_echeance')
+        mois = self.cleaned_data.get('mois')
+        contrat = self.cleaned_data.get('contrat')
+
+        # Si aucune échéance n'est fournie, la calculer
+        if not date_echeance and mois and contrat:
+            jour_echeance = getattr(contrat, 'jour_echeance', 5)
+
+            # Vérifier que le jour existe dans le mois
+            _, dernier_jour = monthrange(mois.year, mois.month)
+            jour_echeance_valide = min(jour_echeance, dernier_jour)
+
+            date_echeance = mois.replace(day=jour_echeance_valide)
+
+        return date_echeance
 
     def clean(self):
         """Validation globale du formulaire"""
@@ -234,109 +303,3 @@ class PaiementLocataireForm(forms.ModelForm):
     def get_warnings(self):
         """Récupérer les avertissements"""
         return getattr(self, '_warnings', [])
-
-
-# Formulaire simplifié pour enregistrement rapide
-class PaiementRapideForm(forms.ModelForm):
-    """Formulaire simplifié pour enregistrer rapidement un paiement"""
-
-    class Meta:
-        model = PaiementLocataire
-        fields = ['mois', 'date_paiement', 'mode_paiement', 'reference']
-        widgets = {
-            'mois': DatePickerInput(
-                options={
-                    "format": 'DD-MM-YYYY',
-                    "locale": "fr",
-                    "viewMode": "months",
-                    "format": "MM/YYYY",
-                }
-            ),
-            'date_paiement': DatePickerInput(
-                options={
-                    "format": 'DD-MM-YYYY',
-                    "locale": "fr",
-                    "showTodayButton": True,
-                }
-            ),
-            'mode_paiement': forms.Select(attrs={'class': 'form-select'}),
-            'reference': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Référence (optionnel)'
-            }),
-        }
-
-    def __init__(self, *args, **kwargs):
-        self.contrat = kwargs.pop('contrat', None)
-        super().__init__(*args, **kwargs)
-
-        self.fields['date_paiement'].initial = date.today()
-        self.fields['reference'].required = False
-
-    def save(self, commit=True):
-        paiement = super().save(commit=False)
-
-        if self.contrat:
-            paiement.contrat = self.contrat
-            paiement.loyer = self.contrat.loyer_mensuel
-            paiement.charges = self.contrat.charges_mensuelles
-            paiement.statut = 'recu'
-            paiement.valide = True
-
-        if commit:
-            paiement.save()
-
-        return paiement
-
-
-# Formulaire de recherche/filtrage
-class PaiementSearchForm(forms.Form):
-    """Formulaire de recherche des paiements"""
-
-    recherche = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Rechercher par locataire, appartement...'
-        })
-    )
-
-    date_debut = forms.DateField(
-        required=False,
-        widget=DatePickerInput(
-            options={
-                "format": '%d/%m/%Y',
-                "locale": "fr"
-            }
-        ),
-        label="Du"
-    )
-
-    date_fin = forms.DateField(
-        required=False,
-        widget=DatePickerInput(
-            options={
-                "format": 'DD-MM-YYYY',
-                "locale": "fr"
-            }
-        ),
-        label="Au"
-    )
-
-    statut = forms.ChoiceField(
-        required=False,
-        choices=[('', 'Tous les statuts')] + PaiementLocataire._meta.get_field('statut').choices,
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-
-    # mode_paiement = forms.ChoiceField(
-    #     required=False,
-    #     choices=[('', 'Tous les modes')] + PaiementLocataire._meta.get_field('mode_paiement').choices,
-    #     widget=forms.Select(attrs={'class': 'form-select'})
-    # )
-
-    en_retard = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        label="Paiements en retard uniquement"
-    )

@@ -127,7 +127,7 @@ class DashboardView(TemplateView):
             activites.append({
                 'type': 'paiement',
                 'date': paiement.created_at,
-                'description': f'Paiement de {paiement.contrat.locataire.nom_complet} - {paiement.total}€',
+                'description': f'Enregistrement du paiement de {paiement.contrat.locataire.nom_complet} - {paiement.total}€',
                 'objet': paiement
             })
 

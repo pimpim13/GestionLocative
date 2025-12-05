@@ -9,7 +9,7 @@ class ContratForm(forms.ModelForm):
     class Meta:
         model = Contrats
         fields = [
-            'locataire', 'appartement', 'date_debut', 'date_fin',
+            'locataire', 'appartement', 'date_debut', 'date_fin', 'jour_echeance',
             'loyer_mensuel', 'charges_mensuelles', 'depot_garantie',
             'indice_reference', 'date_revision', 'notes', 'actif', 'fichier_contrat',
             'preavis_donne', 'date_preavis', 'etat_lieux_entree', 'etat_lieux_sortie'

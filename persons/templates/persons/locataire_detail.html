@@ -1,0 +1,573 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block Title %}{{ locataire.nom_complet }}{% endblock Title %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête avec nom du locataire -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="h2 text-center">
+                <i class="fas fa-user me-2"></i>{{ locataire.nom_complet }}
+            </h3>
+            <p class="text-center text-muted">
+                {% if locataire.actif %}
+                    <span class="badge bg-success">Actif</span>
+                {% else %}
+                    <span class="badge bg-danger">Inactif</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Onglets de navigation -->
+    <ul class="nav nav-tabs mb-4" id="locataireTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button">
+                <i class="fas fa-info-circle me-2"></i>Informations
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="contrats-tab" data-bs-toggle="tab" data-bs-target="#contrats" type="button">
+                <i class="fas fa-file-contract me-2"></i>Contrats ({{ contrats.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="paiements-tab" data-bs-toggle="tab" data-bs-target="#paiements" type="button">
+                <i class="fas fa-euro-sign me-2"></i>Paiements
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
+                <i class="fas fa-folder me-2"></i>Documents
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content" id="locataireTabContent">
+
+        <!-- ONGLET INFORMATIONS -->
+        <div class="tab-pane fade show active" id="infos" role="tabpanel">
+            <div class="row">
+                <!-- Carte Informations personnelles -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user me-2"></i>Informations Personnelles
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="40%">Nom complet:</th>
+                                    <td><strong>{{ locataire.nom_complet }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>
+                                        <a href="mailto:{{ locataire.email }}">
+                                            {{ locataire.email }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Téléphone:</th>
+                                    <td>
+                                        <a href="tel:{{ locataire.telephone }}">
+                                            {{ locataire.telephone }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Statut:</th>
+                                    <td>
+                                        {% if locataire.actif %}
+                                            <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Bouton modifier -->
+                            <div class="mt-3">
+                                <a href="{% url 'persons:locataire_update' locataire.pk %}" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-edit me-2"></i>Modifier les informations
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte Contrat actuel -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-contract me-2"></i>Contrat Actuel
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if contrat_actuel %}
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Immeuble:</th>
+                                        <td>{{ contrat_actuel.appartement.immeuble.nom }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Appartement:</th>
+                                        <td>N° {{ contrat_actuel.appartement.numero }} - Étage {{ contrat_actuel.appartement.etage }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date début:</th>
+                                        <td>{{ contrat_actuel.date_debut|date:"d/m/Y" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Loyer mensuel:</th>
+                                        <td><strong>{{ contrat_actuel.loyer_mensuel }} €</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Charges:</th>
+                                        <td>{{ contrat_actuel.charges_mensuelles }} €</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <th>Total mensuel:</th>
+                                        <td><strong>{{ contrat_actuel.loyer_total }} €</strong></td>
+                                    </tr>
+                                </table>
+
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'contrats:contrat_update' contrat_actuel.pk %}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-eye me-2"></i>Voir le contrat
+                                    </a>
+                                    <a href="{% url 'paiements:paiement_create' contrat_actuel.pk %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-2"></i>Enregistrer un paiement
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p>Aucun contrat actif</p>
+                                    <a href="{% url 'contrats:contrat_create' %}?locataire={{ locataire.pk }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-2"></i>Créer un contrat
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte Notes -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-sticky-note me-2"></i>Notes
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if locataire.notes %}
+                                <p class="mb-0">{{ locataire.notes|linebreaks }}</p>
+                            {% else %}
+                                <p class="text-muted mb-0">Aucune note</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET CONTRATS -->
+        <div class="tab-pane fade" id="contrats" role="tabpanel">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Liste des Contrats
+                            </h5>
+                            <a href="{% url 'contrats:contrat_create' %}?locataire={{ locataire.pk }}" class="btn btn-light btn-sm">
+                                <i class="fas fa-plus me-2"></i>Nouveau contrat
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if contrats %}
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Immeuble</th>
+                                            <th>Appartement</th>
+                                            <th>Date début</th>
+                                            <th>Date fin</th>
+                                            <th class="text-end">Loyer</th>
+                                            <th class="text-center">Statut</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for contrat in contrats %}
+                                        <tr>
+                                            <td>{{ contrat.appartement.immeuble.nom }}</td>
+                                            <td>Apt {{ contrat.appartement.numero }}</td>
+                                            <td>{{ contrat.date_debut|date:"d/m/Y" }}</td>
+                                            <td>
+                                                {% if contrat.date_fin %}
+                                                    {{ contrat.date_fin|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">Indéterminée</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">{{ contrat.loyer_total }} €</td>
+                                            <td class="text-center">
+                                                {% if contrat.actif %}
+                                                    <span class="badge bg-success">Actif</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Terminé</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'contrats:contrat_update' contrat.pk %}" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'contrats:contrat_update' contrat.pk %}" class="btn btn-secondary btn-sm">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <div class="text-center text-muted py-5">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p>Aucun contrat</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET PAIEMENTS -->
+        <div class="tab-pane fade" id="paiements" role="tabpanel">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-money-bill-wave me-2"></i>Historique des Paiements
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if paiements_recents %}
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mois</th>
+                                            <th>Date paiement</th>
+                                            <th class="text-end">Loyer</th>
+                                            <th class="text-end">Charges</th>
+                                            <th class="text-end">Total</th>
+                                            <th>Mode</th>
+                                            <th class="text-center">Statut</th>
+                                            <th class="text-center">Validé</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for paiement in paiements_recents %}
+                                        <tr>
+                                            <td>{{ paiement.mois|date:"m/Y" }}</td>
+                                            <td>{{ paiement.date_paiement|date:"d/m/Y" }}</td>
+                                            <td class="text-end">{{ paiement.loyer }} €</td>
+                                            <td class="text-end">{{ paiement.charges }} €</td>
+                                            <td class="text-end"><strong>{{ paiement.total }} €</strong></td>
+                                            <td>{{ paiement.get_mode_paiement_display }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-{{ paiement.statut|yesno:'success,warning' }}">
+                                                    {{ paiement.get_statut_display }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if paiement.valide %}
+                                                    <i class="fa fa-check-circle" style="color: green;"></i>
+                                                {% else %}
+                                                    <i class="fa fa-times-circle" style="color: red;"></i>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <a href="{% url 'paiements:paiement_update' paiement.pk %}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+
+                                {% if contrat_actuel %}
+                                <div class="card-footer">
+                                    <a href="{% url 'paiements:paiement_create' contrat_actuel.pk %}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-plus me-2"></i>Enregistrer un nouveau paiement
+                                    </a>
+                                    <a href="{% url 'paiements:paiements_locataires_list' contrat_actuel.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-list me-2"></i>Voir tous les paiements
+                                    </a>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center text-muted py-5">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p>Aucun paiement enregistré</p>
+                                    {% if contrat_actuel %}
+                                    <a href="{% url 'paiements:paiement_create' contrat_actuel.pk %}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-plus me-2"></i>Enregistrer le premier paiement
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- ONGLET DOCUMENTS - Section à remplacer dans votre template -->
+<div class="tab-pane fade" id="documents" role="tabpanel">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder-open me-2"></i>Documents
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Quittances -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>
+                                        <i class="fas fa-file-pdf text-danger me-2"></i>
+                                        Quittances de loyer
+                                        <span class="badge bg-primary">{{ nb_quittances }}</span>
+                                    </h6>
+                                    {% if contrat_actuel %}
+                                        <p class="text-muted small mb-2">
+                                            Toutes les quittances générées pour ce locataire
+                                        </p>
+
+                                        {% if quittances_recentes %}
+                                            <div class="list-group list-group-flush mb-2">
+                                                {% for quittance in quittances_recentes|slice:":5" %}
+                                                <div class="list-group-item p-2 d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <small class="text-muted">{{ quittance.mois|date:"m/Y" }}</small>
+                                                        <br>
+                                                        <strong>{{ quittance.numero }}</strong>
+                                                        {% if quittance.envoyee %}
+                                                            <i class="fas fa-check-circle text-success ms-1"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="btn-group btn-group-sm">
+                                                        {% if quittance.fichier_pdf %}
+                                                        <a href="{% url 'quittances:download_pdf' quittance.pk %}"
+                                                           class="btn btn-outline-danger btn-sm"
+                                                           title="Télécharger">
+                                                            <i class="fas fa-download"></i>
+                                                        </a>
+                                                        <a href="{% url 'quittances:preview_pdf' quittance.pk %}"
+                                                           class="btn btn-outline-primary btn-sm"
+                                                           target="_blank"
+                                                           title="Prévisualiser">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        {% else %}
+                                                        <a href="{% url 'quittances:regenerer_pdf' quittance.pk %}"
+                                                           class="btn btn-outline-warning btn-sm"
+                                                           title="Générer PDF">
+                                                            <i class="fas fa-redo"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <a href="{% url 'quittances:list' %}?contrat={{ contrat_actuel.pk }}"
+                                               class="btn btn-outline-primary btn-sm w-100">
+                                                <i class="fas fa-list me-2"></i>Voir toutes les quittances
+                                            </a>
+                                        {% else %}
+                                            <p class="text-muted small mb-2">Aucune quittance générée</p>
+                                            <a href="{% url 'quittances:generer' contrat_actuel.pk %}"
+                                               class="btn btn-outline-success btn-sm">
+                                                <i class="fas fa-plus me-2"></i>Générer une quittance
+                                            </a>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted small">Aucun contrat actif</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contrats -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>
+                                        <i class="fas fa-file-contract text-primary me-2"></i>
+                                        Contrats de bail
+                                        <span class="badge bg-primary">{{ contrats.count }}</span>
+                                    </h6>
+                                    <p class="text-muted small mb-2">
+                                        {{ contrats.count }} contrat(s) enregistré(s)
+                                    </p>
+                                    {% if contrat_actuel %}
+                                        {% if contrat_actuel.fichier_contrat %}
+                                        <a href="{{ contrat_actuel.fichier_contrat.url }}"
+                                           class="btn btn-outline-primary btn-sm mb-2 w-100"
+                                           target="_blank">
+                                            <i class="fas fa-download me-2"></i>Télécharger le contrat actuel
+                                        </a>
+                                        {% endif %}
+                                        <a href="{% url 'contrats:contrat_update' contrat_actuel.pk %}"
+                                           class="btn btn-outline-secondary btn-sm w-100">
+                                            <i class="fas fa-eye me-2"></i>Voir le contrat actuel
+                                        </a>
+                                    {% else %}
+                                        <p class="text-muted small">Aucun contrat actif</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- États des lieux -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>
+                                        <i class="fas fa-clipboard-list text-success me-2"></i>
+                                        États des lieux
+                                    </h6>
+                                    {% if contrat_actuel %}
+                                        <div class="d-grid gap-2">
+                                            {% if contrat_actuel.etat_lieux_entree %}
+                                            <a href="{{ contrat_actuel.etat_lieux_entree.url }}"
+                                               class="btn btn-outline-success btn-sm"
+                                               target="_blank">
+                                                <i class="fas fa-download me-2"></i>État des lieux entrée
+                                            </a>
+                                            {% else %}
+                                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                <i class="fas fa-times me-2"></i>État des lieux entrée (Non disponible)
+                                            </button>
+                                            {% endif %}
+
+                                            {% if contrat_actuel.etat_lieux_sortie %}
+                                            <a href="{{ contrat_actuel.etat_lieux_sortie.url }}"
+                                               class="btn btn-outline-warning btn-sm"
+                                               target="_blank">
+                                                <i class="fas fa-download me-2"></i>État des lieux sortie
+                                            </a>
+                                            {% else %}
+                                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                <i class="fas fa-times me-2"></i>État des lieux sortie (Non disponible)
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted small mb-0">Aucun contrat actif</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Autres documents -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>
+                                        <i class="fas fa-paperclip text-secondary me-2"></i>
+                                        Autres documents
+                                    </h6>
+                                    <p class="text-muted small mb-2">
+                                        Pièces d'identité, justificatifs...
+                                    </p>
+                                    <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                        <i class="fas fa-upload me-2"></i>Fonctionnalité à venir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions rapides si contrat actuel -->
+                    {% if contrat_actuel %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-bolt text-warning me-2"></i>Actions rapides
+                                    </h6>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'quittances:generer' contrat_actuel.pk %}"
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-file-pdf me-2"></i>Générer une quittance
+                                        </a>
+                                        <a href="{% url 'paiements:paiement_create' contrat_actuel.pk %}"
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-euro-sign me-2"></i>Enregistrer un paiement
+                                        </a>
+                                        <a href="{% url 'contrats:contrat_update' contrat_actuel.pk %}"
+                                           class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-edit me-2"></i>Modifier le contrat
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Sauvegarder l'onglet actif dans localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+        // Restaurer l'onglet actif
+        const activeTab = localStorage.getItem('activeLocataireTab');
+        if (activeTab) {
+            const tabElement = document.querySelector(`button[data-bs-target="${activeTab}"]`);
+            if (tabElement) {
+                const tab = new bootstrap.Tab(tabElement);
+                tab.show();
+            }
+        }
+
+        // Sauvegarder quand on change d'onglet
+        const tabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(e) {
+                localStorage.setItem('activeLocataireTab', e.target.dataset.bsTarget);
+            });
+        });
+    });
+</script>
+{% endblock %}

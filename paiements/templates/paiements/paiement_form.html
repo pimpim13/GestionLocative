@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% block Title %} Creation Contrat{% endblock Title %}
+{% block Title %} Creation Paiement{% endblock Title %}
 
 {% block content %}
 <div class="container">
-    <h2 class="my-3">Créer un contrat</h2>
+    <h2 class="my-3">Enregistrer un paiement</h2>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}

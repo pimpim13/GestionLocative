@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block Title %}Mon profil - {{ user.get_full_name }}{% endblock Title %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h3">
+                <i class="fas fa-user-circle me-2"></i>Mon profil
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+                    <li class="breadcrumb-item active">Profil</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne principale : Formulaire -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Modifier mes informations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Informations personnelles -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3 border-bottom pb-2">
+                                <i class="fas fa-id-card me-2"></i>Informations personnelles
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.first_name|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.last_name|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3 border-bottom pb-2">
+                                <i class="fas fa-phone me-2"></i>Contact
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.email|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.telephone|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                {{ form.adresse|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Messages d'erreur globaux -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Changer le mot de passe -->
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key me-2"></i>Sécurité
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Pour changer votre mot de passe, cliquez sur le bouton ci-dessous.</p>
+                    <a href="{% url 'password_change' %}" class="btn btn-warning">
+                        <i class="fas fa-lock me-2"></i>Changer mon mot de passe
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne latérale : Informations -->
+        <div class="col-lg-4">
+            <!-- Carte Avatar et infos -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-body text-center">
+                    <div class="avatar-circle bg-primary text-white mx-auto mb-3" 
+                         style="width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+                        {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                    </div>
+                    <h5 class="mb-1">{{ user.get_full_name }}</h5>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+                    <span class="badge bg-{{ user.fonction|yesno:'success,primary,info' }}">
+                        {{ user.get_fonction_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Informations du compte -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informations du compte
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td class="text-muted">Nom d'utilisateur:</td>
+                            <td><strong>{{ user.username }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Fonction:</td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {{ user.get_fonction_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Statut:</td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Actif
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle"></i> Inactif
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if user.is_superuser %}
+                        <tr>
+                            <td class="text-muted">Droits:</td>
+                            <td>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-crown"></i> Super Admin
+                                </span>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            <!-- Statistiques rapides -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Mon activité
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Dernière connexion:</span>
+                        <small><strong>{{ user.last_login|date:"d/m/Y H:i" }}</strong></small>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Membre depuis:</span>
+                        <small><strong>{{ user.date_joined|date:"d/m/Y" }}</strong></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Actions rapides
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'password_change' %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-key me-2"></i>Changer le mot de passe
+                        </a>
+                        {% if user.fonction == 'proprietaire' or user.is_superuser %}
+                        <a href="{% url 'create_user' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-plus me-2"></i>Créer un utilisateur
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-tachometer-alt me-2"></i>Tableau de bord
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="card mt-3 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-question-circle text-info me-2"></i>Besoin d'aide ?
+                    </h6>
+                    <p class="small mb-2">
+                        Si vous rencontrez des problèmes avec votre compte, contactez l'administrateur.
+                    </p>
+                    <a href="mailto:support@example.com" class="btn btn-sm btn-outline-info w-100">
+                        <i class="fas fa-envelope me-2"></i>Contacter le support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Confirmation avant de quitter si modifications
+    let formModified = false;
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            formModified = true;
+        });
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formModified) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    form.addEventListener('submit', function() {
+        formModified = false;
+    });
+
+    // Animation de l'avatar au survol
+    const avatar = document.querySelector('.avatar-circle');
+    if (avatar) {
+        avatar.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1) rotate(5deg)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        avatar.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1) rotate(0deg)';
+        });
+    }
+</script>
+{% endblock %}

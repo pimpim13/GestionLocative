@@ -5,6 +5,7 @@ from accounts.models import TimeStampedModel
 from persons.models import Locataires
 from immeuble.models import Appartement
 from decimal import Decimal
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Contrats(TimeStampedModel):
@@ -49,6 +50,14 @@ class Contrats(TimeStampedModel):
         null = True,
         blank = True
     )
+
+    jour_echeance = models.PositiveSmallIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(31)],
+        verbose_name="Jour d'échéance",
+        help_text = "Jour du mois où le loyer doit être payé"
+    )
+
     depot_garantie = models.DecimalField(
         max_digits=8,
         decimal_places=2,
