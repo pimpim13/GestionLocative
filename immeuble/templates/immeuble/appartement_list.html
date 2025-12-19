@@ -1,66 +1,264 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block Title %}Liste des Appartements{% endblock %}
 
 {% block content %}
-<div class="container-fluid"
-    <h2>Liste des appartements</h2>
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h2 text-center">
+                <i class="fas fa-door-open me-2"></i>Gestion des Appartements
+            </h2>
+        </div>
+    </div>
 
-    <!-- Filtres -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Filtrer par immeuble</label>
-                        <select name="immeuble" class="form-select" onchange="this.form.submit()">
-                            <option value="">Tous les immeubles</option>
-                            {% for immeuble in immeubles %}
-                                <option value="{{ immeuble.id }}"
-                                    {% if immeuble_selected_id == immeuble.id %}selected{% endif %}>
-                                    {{ immeuble.nom }}
-                                </option>
-                            {% endfor %}
-                        </select>
+    <!-- Filtres et statistiques -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtres
+                    </h5>
                 </div>
-            </form>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">
+                                <i class="fas fa-building me-2"></i>Filtrer par immeuble
+                            </label>
+                            <select name="immeuble" class="form-select" onchange="this.form.submit()">
+                                <option value="">Tous les immeubles</option>
+                                {% for immeuble in immeubles %}
+                                    <option value="{{ immeuble.id }}"
+                                        {% if immeuble_selected_id == immeuble.id %}selected{% endif %}>
+                                        {{ immeuble.nom }} ({{ immeuble.ville }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            {% if immeuble_selected_id %}
+                                <a href="{% url 'immeuble:appartement_list' %}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-times me-2"></i>Réinitialiser
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Statistiques
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="mb-2">
+                                <i class="fas fa-door-open text-primary fa-2x"></i>
+                            </div>
+                            <h4 class="mb-0">{{ appartements.count }}</h4>
+                            <small class="text-muted">Total</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-2">
+                                <i class="fas fa-check-circle text-success fa-2x"></i>
+                            </div>
+                            <h4 class="mb-0">
+                                {{ appartements|length|add:0 }}
+                                {# Compter les loués #}
+                                {% widthratio appartements.count 1 1 %}
+                            </h4>
+                            <small class="text-muted">Loués</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Liste des appartements -->
-    {% if appartements %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Immeuble</th>
-                    <th>Numéro</th>
-                    <th>Étage</th>
-                    <th>Loué</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for appartement in appartements %}
-                <tr>
-                    <td>{{ appartement.immeuble.nom }}</td>
-                    <td>{{ appartement.numero }}</td>
-                    <td>{{ appartement.etage }}</td>
-                    <td>
-                        {% if appartement.loue %}
-                            <span class="badge bg-success">Oui</span>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        {% if immeuble %}
+                            Appartements de {{ immeuble.nom }}
                         {% else %}
-                            <span class="badge bg-warning">Non</span>
+                            Liste des appartements
                         {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'immeuble:update_appartement' appartement.pk %}"
-                           class="btn btn-sm btn-primary">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p class="text-muted">Aucun appartement trouvé</p>
-    {% endif %}
+                    </h5>
+                    <a href="{% url 'immeuble:create_appartement' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-2"></i>Nouvel appartement
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if appartements %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>
+                                            <i class="fas fa-building me-1"></i>Immeuble
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-door-open me-1"></i>Numéro
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-layer-group me-1"></i>Étage
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-user me-1"></i>Propriétaire
+                                        </th>
+                                        <th class="text-end">
+                                            <i class="fas fa-euro-sign me-1"></i>Loyer
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-home me-1"></i>Statut
+                                        </th>
+                                        <th class="text-center">
+                                            <i class="fas fa-file-contract me-1"></i>Contrat
+                                        </th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appartement in appartements %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ appartement.immeuble.nom }}</strong><br>
+                                            <small class="text-muted">{{ appartement.immeuble.ville }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary fs-6">{{ appartement.numero }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if appartement.etage == 0 %}
+                                                RDC
+                                            {% else %}
+                                                {{ appartement.etage }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if appartement.proprietaire %}
+                                                <small>{{ appartement.proprietaire }}</small>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if appartement.loyer_base %}
+                                                <strong>{{ appartement.loyer_base|floatformat:2 }} €</strong>
+                                            {% else %}
+                                                <span class="text-muted">Non défini</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if appartement.loue %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Loué
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-times me-1"></i>Libre
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if appartement.loue %}
+                                                <a href="#" class="btn btn-sm btn-outline-primary" title="Voir le contrat">
+                                                    <i class="fas fa-file-contract"></i>
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'contrats:contrat_create' %}?appartement={{ appartement.id }}"
+                                                   class="btn btn-sm btn-outline-success"
+                                                   title="Créer un contrat">
+                                                    <i class="fas fa-plus"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'immeuble:update_appartement' appartement.pk %}"
+                                                   class="btn btn-outline-info"
+                                                   title="Détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'immeuble:update_appartement' appartement.pk %}"
+                                                   class="btn btn-outline-primary"
+                                                   title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'immeuble:delete_appartement' appartement.pk %}"
+                                                   class="btn btn-outline-danger"
+                                                   title="Supprimer"
+                                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet appartement ?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">
+                                {% if immeuble %}
+                                    Aucun appartement trouvé pour cet immeuble
+                                {% else %}
+                                    Aucun appartement enregistré
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'immeuble:create_appartement' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Créer le premier appartement
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons de navigation -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'immeuble:list_immeuble' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour aux immeubles
+            </a>
+            <a href="{% url 'immeuble:create_appartement' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nouvel appartement
+            </a>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .table thead th {
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+    }
+
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+    }
+</style>
 {% endblock %}

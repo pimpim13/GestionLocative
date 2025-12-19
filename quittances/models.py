@@ -95,7 +95,10 @@ class Quittance(TimeStampedModel):
         ]
 
     def __str__(self):
-        return f"Quittance {self.numero} - {self.contrat.locataire.nom_complet}"
+        # ✅ CORRECTION : utiliser get_locataire_principal()
+        locataire = self.contrat.get_locataire_principal()
+        nom = locataire.nom_complet if locataire else "Sans locataire"
+        return f"Quittance {self.numero} - {nom}"
 
     def save(self, *args, **kwargs):
         # Génération automatique du numéro si non fourni
@@ -118,9 +121,14 @@ class Quittance(TimeStampedModel):
         super().save(*args, **kwargs)
 
     @property
-    def locataire(self):
-        """Raccourci vers le locataire"""
-        return self.contrat.locataire
+    def locataire_principal(self):
+        """Raccourci vers le locataire principal"""
+        return self.contrat.get_locataire_principal()
+
+    @property
+    def tous_locataires(self):
+        """Raccourci vers tous les locataires"""
+        return self.contrat.get_tous_locataires()
 
     @property
     def appartement(self):

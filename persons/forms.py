@@ -10,7 +10,7 @@ class ProprietaireForm(forms.ModelForm):
         model = Proprietaires
 
         fields = [
-            'raison_sociale', 'nom', 'prenom', 'email', 'telephone',
+            'raison_sociale', 'nom', 'prenom', 'email', 'telephone', 'actif',
         ]
         widgets = {
             'raison-sociale' :  forms.TextInput(attrs={'class': 'form-control'}),

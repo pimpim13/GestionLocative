@@ -11,12 +11,25 @@ import calendar
 
 
 class QuittancePDFGenerator:
-    """Générateur de PDF pour les quittances de loyer"""
+    """Générateur de PDF pour les quittances de loyer avec support multi-locataires"""
 
     def __init__(self, quittance):
         self.quittance = quittance
         self.contrat = quittance.contrat
-        self.locataire = self.contrat.locataire
+
+        # ============================================================
+        # GESTION MULTI-LOCATAIRES
+        # ============================================================
+        # Vérifier si le contrat utilise le nouveau système
+        if hasattr(self.contrat, 'locataires') and self.contrat.locataires.exists():
+            # Nouveau système : plusieurs locataires via ManyToMany
+            self.locataires = self.contrat.get_tous_locataires()
+            self.locataire_principal = self.contrat.get_locataire_principal()
+        else:
+            # Ancien système : un seul locataire via FK
+            self.locataires = [self.contrat.locataire] if self.contrat.locataire else []
+            self.locataire_principal = self.contrat.locataire
+
         self.appartement = self.contrat.appartement
         self.immeuble = self.appartement.immeuble
 
@@ -71,11 +84,11 @@ class QuittancePDFGenerator:
 
         # En-tête compact
         story.extend(self._create_header())
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 30))
 
         # Titre
         story.append(Paragraph("QUITTANCE DE LOYER", self.styles['CustomTitle']))
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 40))
 
         # Propriétaire et locataire côte à côte
         story.extend(self._create_owner_tenant_info())
@@ -83,15 +96,15 @@ class QuittancePDFGenerator:
 
         # Détails de la location (compact)
         story.extend(self._create_rental_details())
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 40))
 
         # Tableau des montants
         story.extend(self._create_amounts_table())
-        story.append(Spacer(1, 10))
+        story.append(Spacer(1, 40))
 
         # Texte légal compact
         story.extend(self._create_legal_text())
-        story.append(Spacer(1, 15))
+        story.append(Spacer(1, 55))
 
         # Signature
         story.extend(self._create_signature())
@@ -125,11 +138,8 @@ class QuittancePDFGenerator:
 
         header_data = [
             [proprio_nom, f"Quittance N° {self.quittance.numero}"],
-            [f"Tél: {proprio_tel}", f"Quittance N° {self.quittance.numero}"],
-            [proprio_email, f"Date: {datetime.now().strftime('%d/%m/%Y')}"],
-            [""],
-            [""],
-            [""],
+            [f"Tél: {proprio_tel}", f"Date: {datetime.now().strftime('%d/%m/%Y')}"],
+            [proprio_email, ""],
         ]
 
         header_table = Table(header_data, colWidths=[10 * cm, 8 * cm])
@@ -144,10 +154,12 @@ class QuittancePDFGenerator:
         return elements
 
     def _create_owner_tenant_info(self):
-        """Informations propriétaire et locataire côte à côte"""
+        """Informations propriétaire et locataire(s) côte à côte"""
         elements = []
 
-        # Préparer les données du propriétaire
+        # ============================================================
+        # PROPRIÉTAIRE
+        # ============================================================
         proprietaire = self.appartement.proprietaire
 
         if proprietaire:
@@ -173,18 +185,56 @@ class QuittancePDFGenerator:
             Informations à compléter
             """
 
-        # Préparer les données du locataire
-        tenant_text = f"""
-        <b>LOCATAIRE</b><br/>
-        <b>{self.locataire.prenom} {self.locataire.nom}</b><br/>
-        {self.immeuble.adresse}<br/>
-        Appartement {self.appartement.numero}<br/>
-        {self.immeuble.code_postal} {self.immeuble.ville}<br/>
-        Tél: {self.locataire.telephone}<br/>
-        Email: {self.locataire.email}
-        """
+        # ============================================================
+        # LOCATAIRE(S) - GESTION MULTI-LOCATAIRES
+        # ============================================================
+        if len(self.locataires) == 0:
+            # Aucun locataire
+            tenant_text = """
+            <b>LOCATAIRE</b><br/>
+            <b>Non renseigné</b><br/>
+            """
+        elif len(self.locataires) == 1:
+            # Un seul locataire
+            locataire = self.locataires[0]
+            tenant_text = f"""
+            <b>LOCATAIRE</b><br/>
+            <b>{locataire.prenom} {locataire.nom}</b><br/>
+            {self.immeuble.adresse}<br/>
+            Appartement {self.appartement.numero}<br/>
+            {self.immeuble.code_postal} {self.immeuble.ville}<br/>
+            Tél: {locataire.telephone}<br/>
+            Email: {locataire.email}
+            """
+        else:
+            # Plusieurs locataires
+            tenant_text = "<b>LOCATAIRES</b><br/>"
 
-        # Créer un tableau avec deux colonnes
+            for i, locataire in enumerate(self.locataires):
+                # Marquer le locataire principal
+                if locataire == self.locataire_principal:
+                    tenant_text += f"<b>{locataire.prenom} {locataire.nom}</b> (Principal)<br/>"
+                else:
+                    tenant_text += f"<b>{locataire.prenom} {locataire.nom}</b><br/>"
+
+            # Ajouter l'adresse une seule fois
+            tenant_text += f"""
+            {self.immeuble.adresse}<br/>
+            Appartement {self.appartement.numero}<br/>
+            {self.immeuble.code_postal} {self.immeuble.ville}
+            """
+
+            # Ajouter les coordonnées du principal
+            if self.locataire_principal:
+                tenant_text += f"""<br/>
+                <i>Contact principal:</i><br/>
+                Tél: {self.locataire_principal.telephone}<br/>
+                Email: {self.locataire_principal.email}
+                """
+
+        # ============================================================
+        # CRÉATION DU TABLEAU
+        # ============================================================
         info_data = [
             [
                 Paragraph(owner_text, self.styles['CustomNormal']),
@@ -241,7 +291,7 @@ class QuittancePDFGenerator:
             ["Désignation", "Montant"],
             [f"Loyer hors charges - {self._format_mois(self.quittance.mois)}",
              f"{float(self.quittance.loyer):.2f} €"],
-            ["Charges locatives", f"{float(self.quittance.charges):.2f} €"],
+            ["Charges locatives (provision)", f"{float(self.quittance.charges):.2f} €"],
             ["TOTAL PAYÉ", f"{float(self.quittance.total):.2f} €"]
         ]
 
@@ -282,12 +332,29 @@ class QuittancePDFGenerator:
         return elements
 
     def _create_legal_text(self):
-        """Texte légal obligatoire compact"""
+        """Texte légal obligatoire compact avec gestion multi-locataires"""
         elements = []
+
+        # ============================================================
+        # ADAPTATION DU TEXTE SELON LE NOMBRE DE LOCATAIRES
+        # ============================================================
+        if len(self.locataires) == 0:
+            locataires_text = "du locataire"
+        elif len(self.locataires) == 1:
+            locataires_text = f"de {self.locataires[0].prenom} {self.locataires[0].nom}"
+        elif len(self.locataires) == 2:
+            locataires_text = (
+                f"de {self.locataires[0].prenom} {self.locataires[0].nom} "
+                f"et {self.locataires[1].prenom} {self.locataires[1].nom}"
+            )
+        else:
+            # 3 locataires ou plus
+            noms = [f"{loc.prenom} {loc.nom}" for loc in self.locataires[:-1]]
+            locataires_text = f"de {', '.join(noms)} et {self.locataires[-1].prenom} {self.locataires[-1].nom}"
 
         legal_text = f"""
         <b>Je soussigné(e), propriétaire du logement désigné ci-dessus, reconnais avoir reçu 
-        de {self.locataire.prenom} {self.locataire.nom}, la somme de {float(self.quittance.total):.2f} euros 
+        {locataires_text}, la somme de {float(self.quittance.total):.2f} euros 
         pour le paiement du loyer et des charges de la période du {self.quittance.mois.strftime('%d/%m/%Y')} 
         au {self._get_end_of_month()}, dont le détail figure ci-dessus.</b>
         """
@@ -328,8 +395,8 @@ class QuittancePDFGenerator:
         elements = []
 
         signature_data = [
-            [f"Fait à {self.immeuble.ville}, le {datetime.now().strftime('%d/%m/%Y')}", ""],
-            ["", "Signature du propriétaire:"],
+            [f"Fait à {self.immeuble.ville}, le {datetime.now().strftime('%d/%m/%Y')}", "Signature du propriétaire:"],
+            ["", ""],
             ["", ""],
             ["", ""],
         ]
@@ -341,7 +408,8 @@ class QuittancePDFGenerator:
             ('ALIGN', (0, 0), (0, 0), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LINEBELOW', (1, -1), (1, -1), 1, colors.black),
+            # ('LINEBELOW', (1, -1), (1, -1), 1, colors.black),
+            ('BOX', (0, 0), (1, -1), 1, colors.black),
         ]))
 
         elements.append(signature_table)

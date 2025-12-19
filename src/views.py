@@ -14,6 +14,7 @@ from contrats.models import Contrats
 from paiements.models import PaiementLocataire
 from quittances.models import Quittance
 
+
 def home(request):
     return render(request, 'home.html')
 
@@ -60,6 +61,7 @@ class DashboardView(TemplateView):
 
         # Paiements en retard
         context['paiements_retard'] = self.get_paiements_retard()
+
         # Contrats se terminant bientôt
         context['contrats_fin_proche'] = self.get_contrats_fin_proche()
 
@@ -72,45 +74,51 @@ class DashboardView(TemplateView):
 
         return context
 
-
     def get_paiements_retard(self):
         """Récupère les paiements en retard"""
         aujourd_hui = date.today()
         mois_actuel = aujourd_hui.replace(day=1)
 
-        # Contrats actifs sans paiement pour le mois actuel
+        # ✅ CORRECTION : Utiliser prefetch_related au lieu de select_related pour locataires
         contrats_sans_paiement = Contrats.objects.filter(
             actif=True,
             date_debut__lte=mois_actuel
         ).exclude(
             paiements_loyers__mois=mois_actuel
-        ).select_related('locataire', 'appartement__immeuble'
+        ).select_related(
+            'appartement__immeuble'
+        ).prefetch_related(
+            'locataires'  # ✅ ManyToMany nécessite prefetch_related
         ).distinct()
 
         retards = []
         for contrat in contrats_sans_paiement:
-            jours_retard = (aujourd_hui - mois_actuel.replace(day=5)).days
-            if jours_retard > 0:
-                retards.append({
-                    'contrat': contrat,
-                    'jours_retard': jours_retard,
-                    'montant_du': contrat.loyer_total
-                })
+            # ✅ CORRECTION : Vérifier qu'il y a au moins un locataire
+            if contrat.get_tous_locataires().exists():
+                jours_retard = (aujourd_hui - mois_actuel.replace(day=5)).days
+                if jours_retard > 0:
+                    retards.append({
+                        'contrat': contrat,
+                        'jours_retard': jours_retard,
+                        'montant_du': contrat.loyer_total
+                    })
 
         return sorted(retards, key=lambda x: x['jours_retard'], reverse=True)[:5]
-
-
-
 
     def get_contrats_fin_proche(self):
         """Récupère les contrats se terminant bientôt"""
         dans_3_mois = date.today() + timedelta(days=90)
 
+        # ✅ CORRECTION : Utiliser prefetch_related pour locataires
         return Contrats.objects.filter(
             actif=True,
             date_fin__lte=dans_3_mois,
             date_fin__gte=date.today()
-        ).select_related('locataire', 'appartement__immeuble').order_by('date_fin')[:5]
+        ).select_related(
+            'appartement__immeuble'
+        ).prefetch_related(
+            'locataires'  # ✅ ManyToMany nécessite prefetch_related
+        ).order_by('date_fin')[:5]
 
     def get_activite_recente(self):
         """Récupère l'activité récente"""
@@ -119,28 +127,46 @@ class DashboardView(TemplateView):
         activites = []
 
         # Paiements récents
+        # ✅ CORRECTION : Utiliser prefetch_related pour locataires
         paiements_recents = PaiementLocataire.objects.filter(
             created_at__gte=depuis_7_jours
-        ).select_related('contrat__locataire').order_by('-created_at')[:5]
+        ).select_related(
+            'contrat__appartement'
+        ).prefetch_related(
+            'contrat__locataires'  # ✅ Accès via contrat
+        ).order_by('-created_at')[:5]
 
         for paiement in paiements_recents:
+            # ✅ CORRECTION : Utiliser get_locataire_principal()
+            locataire = paiement.contrat.get_locataire_principal()
+            nom_locataire = locataire.nom_complet if locataire else "Sans locataire"
+
             activites.append({
                 'type': 'paiement',
                 'date': paiement.created_at,
-                'description': f'Enregistrement du paiement de {paiement.contrat.locataire.nom_complet} - {paiement.total}€',
+                'description': f'Enregistrement du paiement de {nom_locataire} - {paiement.total}€',
                 'objet': paiement
             })
 
         # Quittances générées
+        # ✅ CORRECTION : Utiliser prefetch_related pour locataires
         quittances_recentes = Quittance.objects.filter(
             created_at__gte=depuis_7_jours
-        ).select_related('contrat__locataire').order_by('-created_at')[:5]
+        ).select_related(
+            'contrat__appartement'
+        ).prefetch_related(
+            'contrat__locataires'  # ✅ Accès via contrat
+        ).order_by('-created_at')[:5]
 
         for quittance in quittances_recentes:
+            # ✅ CORRECTION : Utiliser get_locataire_principal()
+            locataire = quittance.contrat.get_locataire_principal()
+            nom_locataire = locataire.nom_complet if locataire else "Sans locataire"
+
             activites.append({
                 'type': 'quittance',
                 'date': quittance.created_at,
-                'description': f'Quittance {quittance.numero} générée pour {quittance.contrat.locataire.nom_complet}',
+                'description': f'Quittance {quittance.numero} générée pour {nom_locataire}',
                 'objet': quittance
             })
 
@@ -172,7 +198,7 @@ class DashboardView(TemplateView):
 
     def get_repartition_immeubles(self):
         """Répartition des appartements par immeuble"""
-        return Immeuble.objects.filter(actif=True).annotate(
+        return Immeuble.objects.annotate(
             nb_appartements=Count('appartements'),
             nb_loues=Count('appartements', filter=Q(appartements__loue=True))
         ).values('nom', 'nb_appartements', 'nb_loues')

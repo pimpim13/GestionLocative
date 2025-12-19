@@ -167,16 +167,21 @@ class PaiementLocataireForm(forms.ModelForm):
             except Contrats.DoesNotExist:
                 pass
 
-        # Filtrer uniquement les contrats actifs dans le select
+        # ✅ CORRECTION : Filtrer les contrats actifs avec prefetch_related au lieu de select_related
         self.fields['contrat'].queryset = Contrats.objects.filter(
             actif=True
-        ).select_related('locataire', 'appartement__immeuble').order_by(
-            'locataire__nom', 'locataire__prenom'
+        ).select_related(
+            'appartement__immeuble'  # ✅ Garder select_related pour appartement
+        ).prefetch_related(
+            'locataires'  # ✅ Utiliser prefetch_related pour locataires (ManyToMany)
+        ).order_by(
+            'appartement__immeuble__nom',
+            'appartement__numero'
         )
 
-        # Personnaliser l'affichage des contrats dans le select
+        # ✅ CORRECTION : Personnaliser l'affichage des contrats dans le select
         self.fields['contrat'].label_from_instance = lambda obj: (
-            f"{obj.locataire.nom_complet} - "
+            f"{obj.get_locataires_display()} - "
             f"{obj.appartement.immeuble.nom} Apt {obj.appartement.numero}"
         )
 

@@ -1,78 +1,179 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% block Title %} Creation Contrat{% endblock Title %}
+{% block Title %}Création Contrat{% endblock Title %}
 
 {% block content %}
 <div class="container">
-    <h2 class="my-3">Créer un contrat</h2>
+    <h2 class="my-4">
+        <i class="fas fa-file-contract me-2"></i>Créer un nouveau contrat
+    </h2>
+
+    <!-- Alerte informative -->
+    <div class="alert alert-info mb-4">
+        <h6 class="alert-heading">
+            <i class="fas fa-info-circle me-2"></i>Comment créer un contrat ?
+        </h6>
+        <p class="mb-0">
+            1. Remplissez les informations du contrat ci-dessous<br>
+            2. Enregistrez le contrat<br>
+            3. Vous serez redirigé vers la page de gestion des locataires pour ajouter un ou plusieurs locataires au contrat
+        </p>
+    </div>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <div class="row">
-            <div class="col-md-6">
-                {{ form.locataire|as_crispy_field }}
+        <!-- Informations principales -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-home me-2"></i>Informations principales
+                </h5>
             </div>
-            <div class="col-md-6">
-                {{ form.appartement|as_crispy_field }}
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        {{ form.appartement|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.date_debut|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.date_fin|as_crispy_field }}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                {{ form.date_debut|as_crispy_field }}
+        <!-- Conditions financières -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-euro-sign me-2"></i>Conditions financières
+                </h5>
             </div>
-            <div class="col-md-6">
-                {{ form.date_fin|as_crispy_field }}
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        {{ form.loyer_mensuel|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.charges_mensuelles|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.jour_echeance|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        {{ form.depot_garantie|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.indice_reference|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.date_revision|as_crispy_field }}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-4">
-                {{ form.jour_echeance|as_crispy_field }}
+        <!-- État du contrat -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>État du contrat
+                </h5>
             </div>
-            <div class="col-md-4">
-                {{ form.loyer_mensuel|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.charges_mensuelles|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.depot_garantie|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.indice_reference|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.date_revision|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.fichier_contrat|as_crispy_field }}
-            </div>
-            <div class="col-md-2">
-                {{ form.actif|as_crispy_field }}
-            </div>
-            <div class="col-md-10">
-                {{ form.preavis_donne|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.date_preavis|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.etat_lieux_entree|as_crispy_field }}
-            </div>
-            <div class="col-md-4">
-                {{ form.etat_lieux_sortie|as_crispy_field }}
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ form.actif }}
+                            <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                {{ form.actif.label }}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            {{ form.preavis_donne }}
+                            <label class="form-check-label" for="{{ form.preavis_donne.id_for_label }}">
+                                {{ form.preavis_donne.label }}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.date_preavis|as_crispy_field }}
+                    </div>
+                </div>
             </div>
         </div>
 
-        {{ form.notes|as_crispy_field }}
+        <!-- Documents -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-pdf me-2"></i>Documents
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        {{ form.fichier_contrat|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.etat_lieux_entree|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.etat_lieux_sortie|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <button type="submit" class="btn btn-primary my-3">
-            <i class="fas fa-save me-2"></i>Enregistrer
-        </button>
+        <!-- Notes -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-sticky-note me-2"></i>Notes
+                </h5>
+            </div>
+            <div class="card-body">
+                {{ form.notes|as_crispy_field }}
+            </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'contrats:contrats_list' %}" class="btn btn-secondary">
+                <i class="fas fa-times me-2"></i>Annuler
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Créer le contrat
+            </button>
+        </div>
     </form>
 </div>
+
 {{ form.media }}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+</style>
 {% endblock %}

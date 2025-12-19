@@ -170,11 +170,13 @@ class QuittanceManuelleForm(forms.ModelForm):
         # Filtrer uniquement les contrats actifs
         self.fields['contrat'].queryset = Contrats.objects.filter(
             actif=True
-        ).select_related('locataire', 'appartement__immeuble')
+        ).select_related('appartement__immeuble'
+        ).prefetch_related('locataires')
 
         # Personnaliser l'affichage des contrats
         self.fields['contrat'].label_from_instance = lambda obj: (
-            f"{obj.locataire.nom_complet} - "
+            # f"{obj.locataire.nom_complet} - "
+            f"{obj.get_locataires_display()} - "
             f"{obj.appartement.immeuble.nom} Apt {obj.appartement.numero}"
         )
 

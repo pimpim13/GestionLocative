@@ -21,6 +21,13 @@ class Proprietaires(TimeStampedModel):
         else:
             return f'{self.nom} {self.prenom}'
 
+    @property
+    def nom_complet(self):
+        if not self.raison_sociale:
+            return f"{self.prenom} {self.nom}"
+        else :
+            return f"{self.raison_sociale}"
+
 
 class Locataires(TimeStampedModel):
     nom = models.CharField(max_length=100)
@@ -38,6 +45,14 @@ class Locataires(TimeStampedModel):
         ordering = ['nom', 'prenom']
         verbose_name = "Locataire"
         verbose_name_plural = "Locataires"
+
+    def get_contrats_actifs(self):
+        """Retourne les contrats actifs du locataire"""
+        return self.contrats.filter(actif=True)
+
+    def count_contrats_actifs(self):
+        """Compte les contrats actifs"""
+        return self.contrats.filter(actif=True).count()
 
     def __str__(self):
         return f"{self.nom} {self.prenom}"

@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block Title %}Retirer un locataire du contrat{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h3">
+                <i class="fas fa-user-minus me-2 text-danger"></i>Retirer un locataire du contrat
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'contrats:contrats_list' %}">Contrats</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contrats:contrat_locataires' contrat.id %}">Locataires</a></li>
+                    <li class="breadcrumb-item active">Retirer</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <!-- Alerte de confirmation -->
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Attention
+                </h5>
+                <p class="mb-0">
+                    Vous êtes sur le point de retirer un locataire du contrat. 
+                    Cette action marquera le locataire comme "sorti" mais conservera l'historique.
+                </p>
+            </div>
+
+            <!-- Informations du locataire -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Locataire concerné
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <th width="35%">Nom complet :</th>
+                            <td><strong>{{ relation.locataire.nom_complet }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Email :</th>
+                            <td>{{ relation.locataire.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Téléphone :</th>
+                            <td>{{ relation.locataire.telephone }}</td>
+                        </tr>
+                        <tr>
+                            <th>Rôle :</th>
+                            <td>
+                                <span class="badge bg-info">{{ relation.get_role_display }}</span>
+                                {% if relation.principal %}
+                                <span class="badge bg-warning text-dark">Principal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Date d'entrée :</th>
+                            <td>{{ relation.date_entree|date:"d/m/Y" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-times me-2"></i>Date de sortie
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="date_sortie" class="form-label">
+                                <i class="fas fa-calendar me-2"></i>Date de sortie du bail
+                            </label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="date_sortie" 
+                                   name="date_sortie"
+                                   value="{{ today|date:'Y-m-d' }}"
+                                   min="{{ relation.date_entree|date:'Y-m-d' }}"
+                                   required>
+                            <small class="form-text text-muted">
+                                Date à laquelle le locataire quitte le logement
+                            </small>
+                        </div>
+
+                        <!-- Informations -->
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>Ce qui va se passer :
+                            </h6>
+                            <ul class="mb-0">
+                                <li>Le locataire sera marqué comme "sorti" à cette date</li>
+                                <li>Il n'apparaîtra plus sur les nouvelles quittances</li>
+                                <li>L'historique sera conservé (quittances passées, paiements...)</li>
+                                <li>Vous pourrez consulter cet historique à tout moment</li>
+                                {% if relation.principal %}
+                                <li class="text-danger">
+                                    <strong>Attention :</strong> Ce locataire est le contact principal. 
+                                    Pensez à définir un nouveau principal parmi les locataires restants.
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+
+                        <!-- Avertissement si c'est le dernier -->
+                        {% if contrat.locataires.count == 1 %}
+                        <div class="alert alert-danger">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Dernier locataire !
+                            </h6>
+                            <p class="mb-0">
+                                <strong>Attention :</strong> C'est le seul locataire de ce contrat. 
+                                Si vous le retirez, le contrat n'aura plus aucun locataire actif.
+                                Vous devrez soit :
+                            </p>
+                            <ul class="mt-2 mb-0">
+                                <li>Ajouter un nouveau locataire avant de retirer celui-ci</li>
+                                <li>Ou désactiver/clôturer le contrat</li>
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Boutons -->
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                            <a href="{% url 'contrats:contrat_locataires' contrat.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-user-minus me-2"></i>Confirmer le retrait
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmation finale avant soumission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const locataireNom = '{{ relation.locataire.nom_complet }}';
+        const dateSortie = document.getElementById('date_sortie').value;
+        
+        if (!confirm(`Confirmer le retrait de ${locataireNom} du contrat à partir du ${dateSortie} ?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

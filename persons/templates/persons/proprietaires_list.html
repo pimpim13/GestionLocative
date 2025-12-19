@@ -1,80 +1,137 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
-{% block Title %} Liste de Propriétaires{% endblock Title %}
+
+{% block title %}Liste des Propriétaires{% endblock %}
+
 {% block content %}
-
-
 <div class="container-fluid">
-    <h3  class="h2 text-center">
-        Propriétaires
-    </h3>
-    <div class="row mt-4 d-flex justify-content-center">
-        <div class="col-lg-12">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th scope="col">Raison Sociale</th>
-                    <th scope="col">Nom</th>
-                    <th scope="col">Prénom</th>
-                    <th scope="col">email</th>
-                    <th scope="col">Téléphone</th>
-                    <th scope="col">Actif</th>
-                    <th scope="col">Actions</th>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-user-tie me-2"></i>Propriétaires</h1>
+        <a href="{% url 'persons:proprietaire_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nouveau propriétaire
+        </a>
+    </div>
 
-                </tr>
-                </thead>
-                <tbody>
-                {% for proprietaire in proprietaires %}
-                    <tr>
-                        <td> {{ proprietaire.raison_sociale }} </td>
-                        <td> {{ proprietaire.nom}} </td>
-                        <td> {{ proprietaire.prenom }} </td>
-                        <td> {{ proprietaire.email }} </td>
-                        <td> {{ proprietaire.telephone }} </td>
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="actif" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="1" {% if request.GET.actif == "1" %}selected{% endif %}>Actifs</option>
+                        <option value="0" {% if request.GET.actif == "0" %}selected{% endif %}>Inactifs</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-filter me-2"></i>Filtrer
+                    </button>
+                    <a href="{% url 'persons:proprietaires_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                        <td> 
-                            {% if proprietaire.actif %}
-                                <i class="fa fa-check-circle" style="color: green;"></i>
-                            {% else %}
-                                <i class="fa fa-times-circle" style="color: red;"></i>
-                            {% endif %}
-                        </td>
-                        
-                        
-                        <td>
-                            <button type="button" class="btn btn-primary btn-sm" value="{{ proprietaire.id }}">
-                                <a class="text-light" href="{% url 'persons:proprietaire_update' proprietaire.id %}">Modifier</a>
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" value="{{ proprietaire.id }}">
-                                <a class="text-light" href="#">Supprimer</a>
-                            </button>
-                        </td>
+    <!-- Tableau -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Raison sociale / Nom</th>
+                            <th>Contact</th>
+                            <th>Appartements</th>
+                            <th>Statut</th>
+                            <th>Créé le</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for proprietaire in proprietaires %}
+                        <tr>
+                            <td>
+                                <strong>
+                                    {% if proprietaire.raison_sociale %}
+                                        {{ proprietaire.raison_sociale }}
+                                    {% else %}
+                                        {{ proprietaire.nom }} {{ proprietaire.prenom }}
+                                    {% endif %}
+                                </strong>
+                            </td>
+                            <td>
+                                <div><i class="fas fa-envelope me-2"></i>{{ proprietaire.email }}</div>
+                                <div><i class="fas fa-phone me-2"></i>{{ proprietaire.telephone|default:"N/A" }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ proprietaire.appartement_set.count }} appartement(s)
+                                </span>
+                            </td>
+                            <td>
+                                {% if proprietaire.actif %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ proprietaire.created_at|date:"d/m/Y" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'persons:proprietaire_update' proprietaire.pk %}" class="btn btn-sm btn-info" title="Détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'persons:proprietaire_update' proprietaire.pk %}" class="btn btn-sm btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'persons:proprietaire_delete' proprietaire.pk %}" class="btn btn-sm btn-danger" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Aucun propriétaire trouvé</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-                    </tr>
-                {% endfor %}
-                    <tr>
-                        <th>
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">Première</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédente</a>
+                    </li>
+                    {% endif %}
 
-                        </th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-            <button type="button" class="btn btn-primary btn-sm" value="">
-                <a class="text-light" href="{% url 'persons:proprietaire_create' %}">Nouveau</a>
-            </button>
-            <button type="button" class="btn btn-success btn-sm" value="">
-                <a class="text-light" href="{% url 'persons:persons_accueil' %}">Retour</a>
-            </button>
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivante</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernière</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>
-
-
-{% endblock content %}
+{% endblock %}

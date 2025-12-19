@@ -67,13 +67,15 @@ $(document).ready(function() {
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-users"></i> Locataires
+                            <i class="fas fa-users"></i> Locataires/Proprietaires
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{% url 'persons:locataires_list' %}">Liste des locataires</a></li>
+                            <li><a class="dropdown-item" href="{% url 'persons:proprietaires_list' %}">Liste des proprietaires</a></li>
                             <li><a class="dropdown-item" href="{% url 'contrats:contrats_list' %}">Contrats</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'persons:locataire_create' %}">Nouveau locataire</a></li>
+                            <li><a class="dropdown-item" href="{% url 'persons:proprietaire_create' %}">Nouveau propriétaire</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -81,7 +83,7 @@ $(document).ready(function() {
                             <i class="fas fa-euro-sign"></i> Finances
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'paiements:paiements_contrats_list' %}">Paiements</a></li>
+                            <li><a class="dropdown-item" href="{% url 'paiements:paiement_list' %}">Paiements</a></li>
                             <li><a class="dropdown-item" href="{% url 'quittances:list' %}">Quittances</a></li>
                         </ul>
                     </li>
@@ -187,7 +189,14 @@ $(document).ready(function() {
                     {% if user.is_authenticated %}
                     <small class="text-muted">
                         <i class="fas fa-user me-1"></i>
-                        Connecté en tant que <strong>{{ user.username }}</strong>
+                        Connecté en tant que :
+                        <strong>
+                            {% if user.first_name %}
+                                {{ user.first_name }} {{ user.last_name }}
+                            {% else %}
+                                {{ user.username }}
+                            {% endif %}
+                        </strong>
                     </small>
                     {% endif %}
                 </div>

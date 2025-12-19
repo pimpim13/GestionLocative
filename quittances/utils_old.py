@@ -1,5 +1,6 @@
 # quittances/utils.py
 from decimal import Decimal
+
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from .models import Quittance
@@ -9,13 +10,12 @@ import calendar
 
 
 class QuittanceManager:
-    """Gestionnaire pour la création et gestion des quittances avec support multi-locataires"""
+    """Gestionnaire pour la création et gestion des quittances"""
 
     @staticmethod
     def generer_quittance(contrat, mois, paiement=None, force_regeneration=False):
         """
         Génère une quittance pour un contrat et un mois donné
-        Compatible avec les contrats mono et multi-locataires
 
         Args:
             contrat: Instance du modèle Contrats
@@ -67,7 +67,7 @@ class QuittanceManager:
                 paiement=paiement
             )
 
-        # Générer le PDF (le générateur gère automatiquement le multi-locataires)
+        # Générer le PDF
         try:
             pdf_generator = QuittancePDFGenerator(quittance)
             pdf_content = pdf_generator.generate_pdf()
@@ -90,7 +90,6 @@ class QuittanceManager:
     def generer_quittances_batch(contrats, mois):
         """
         Génère les quittances pour plusieurs contrats en lot
-        Compatible avec contrats mono et multi-locataires
 
         Args:
             contrats: QuerySet ou liste de contrats
@@ -104,26 +103,8 @@ class QuittanceManager:
 
         for contrat in contrats:
             try:
-                # Vérifier que le contrat a au moins un locataire
-                has_locataires = False
-
-                # Nouveau système (ManyToMany)
-                if hasattr(contrat, 'locataires') and contrat.locataires.exists():
-                    has_locataires = True
-                # Ancien système (FK)
-                elif hasattr(contrat, 'locataire') and contrat.locataire:
-                    has_locataires = True
-
-                if not has_locataires:
-                    erreurs.append({
-                        'contrat': contrat,
-                        'erreur': 'Aucun locataire associé au contrat'
-                    })
-                    continue
-
                 quittance = QuittanceManager.generer_quittance(contrat, mois)
                 quittances_generees.append(quittance)
-
             except Exception as e:
                 erreurs.append({
                     'contrat': contrat,
@@ -141,7 +122,6 @@ class QuittanceManager:
     def generer_quittances_mois(mois, immeubles=None):
         """
         Génère toutes les quittances pour un mois donné
-        Compatible avec contrats mono et multi-locataires
 
         Args:
             mois: Date du premier jour du mois
@@ -167,13 +147,10 @@ class QuittanceManager:
                 appartement__immeuble__in=immeubles
             )
 
-        # Précharger les relations pour optimiser
         contrats = contrats_query.select_related(
+            'locataire',
             'appartement',
-            'appartement__immeuble',
-            'appartement__proprietaire'
-        ).prefetch_related(
-            'locataires'  # Pour le nouveau système ManyToMany
+            'appartement__immeuble'
         )
 
         # Générer les quittances
@@ -192,7 +169,6 @@ class QuittanceManager:
     def generer_depuis_paiement(paiement):
         """
         Génère une quittance à partir d'un paiement
-        Compatible avec contrats mono et multi-locataires
 
         Args:
             paiement: Instance de PaiementLocataire
@@ -206,33 +182,3 @@ class QuittanceManager:
             paiement=paiement,
             force_regeneration=False
         )
-
-    @staticmethod
-    def get_statistiques_quittances(annee=None):
-        """
-        Retourne des statistiques sur les quittances générées
-
-        Args:
-            annee: Année pour filtrer (optionnel)
-
-        Returns:
-            dict: Statistiques détaillées
-        """
-        from django.db.models import Count, Sum
-
-        queryset = Quittance.objects.all()
-
-        if annee:
-            queryset = queryset.filter(mois__year=annee)
-
-        stats = {
-            'total_quittances': queryset.count(),
-            'quittances_envoyees': queryset.filter(envoyee=True).count(),
-            'montant_total': queryset.aggregate(Sum('total'))['total__sum'] or 0,
-            'par_mois': queryset.values('mois').annotate(
-                nombre=Count('id'),
-                total=Sum('total')
-            ).order_by('-mois')[:12]
-        }
-
-        return stats

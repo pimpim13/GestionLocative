@@ -39,19 +39,22 @@ class QuittanceListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Quittance.objects.select_related(
-            'contrat__locataire',
+        queryset = (Quittance.objects.select_related(
             'contrat__appartement__immeuble'
-        ).order_by('-mois', '-date_generation')
+        ).prefetch_related(
+            'contrat__locataires'
+        ).order_by('-mois', '-date_generation'))
 
         # Filtres
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
-                Q(contrat__locataire__nom__icontains=search) |
-                Q(contrat__locataire__prenom__icontains=search) |
+                Q(contrat__locataires__nom__icontains=search) |
+                Q(contrat__locataires__prenom__icontains=search) |
                 Q(numero__icontains=search)
-            )
+            ).distinct()  # ✅ Important pour éviter les doublons !
+
+
 
         immeuble_id = self.request.GET.get('immeuble')
         if immeuble_id:
@@ -113,11 +116,22 @@ class QuittanceDetailView(DetailView):
         # Ajouter le paiement associé s'il existe
         if self.object.paiement:
             context['paiement'] = self.object.paiement
-        if self.object.locataire:
-            context['locataire'] = self.object.locataire
+
+        # ✅ Récupérer le locataire principal via la méthode du contrat
+        locataire_principal = self.object.contrat.get_locataire_principal()
+        if locataire_principal:
+            context['locataire_principal'] = locataire_principal
 
         return context
 
+    def get_queryset(self):
+        # Optimiser pour éviter les N+1 queries
+        return Quittance.objects.select_related(
+            'contrat__appartement__immeuble',
+            'paiement'
+        ).prefetch_related(
+            'contrat__locataires'
+        )
 
 @login_required
 def generer_quittance_view(request, contrat_id):
@@ -182,7 +196,7 @@ def generation_batch_view(request):
                     date_debut__lte=mois
                 ).filter(
                     Q(date_fin__isnull=True) | Q(date_fin__gte=mois)
-                ).select_related('locataire', 'appartement__immeuble')
+                ).select_related('appartement__immeuble').prefetch_related('locataires')
 
                 # Filtrer par immeubles si spécifié
                 if immeubles:
@@ -430,6 +444,8 @@ class QuittanceUpdateView(LoginRequiredMixin, UpdateView):
     model = Quittance
     form_class = QuittanceManuelleForm
     template_name = 'quittances/quittance_form.html'
+
+
 
     def form_valid(self, form):
         messages.success(

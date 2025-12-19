@@ -17,27 +17,55 @@
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
-                        <i class="fas fa-user me-2"></i>Informations Locataire
+                        <i class="fas fa-user me-2"></i>Informations Locataire(s)
                     </h5>
                 </div>
                 <div class="card-body">
                     <table class="table table-sm">
                         <tr>
-                            <th width="40%">Locataire:</th>
+                            <th width="40%">Locataire(s):</th>
                             <td>
-                                <a href="{% url 'quittances:detail' quittance.contrat.locataire.pk %}" class="text-decoration-none">
-                                    {{ quittance.contrat.locataire.nom_complet }}
+                                {% if locataire_principal %}
+                                    <a href="{% url 'persons:locataire_detail' locataire_principal.pk %}" class="text-decoration-none">
+                                        {{ quittance.contrat.get_locataires_display }}
+                                    </a>
+                                    {% with nb_locataires=quittance.contrat.get_tous_locataires.count %}
+                                        {% if nb_locataires > 1 %}
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-users me-1"></i>{{ nb_locataires }} locataires sur ce contrat
+                                            </small>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Aucun locataire
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if locataire_principal %}
+                        <tr>
+                            <th>Contact principal:</th>
+                            <td>{{ locataire_principal.nom_complet }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>
+                                <a href="mailto:{{ locataire_principal.email }}">
+                                    {{ locataire_principal.email }}
                                 </a>
                             </td>
                         </tr>
                         <tr>
-                            <th>Email:</th>
-                            <td>{{ quittance.contrat.locataire.email }}</td>
-                        </tr>
-                        <tr>
                             <th>Téléphone:</th>
-                            <td>{{ quittance.contrat.locataire.telephone }}</td>
+                            <td>
+                                <a href="tel:{{ locataire_principal.telephone }}">
+                                    {{ locataire_principal.telephone }}
+                                </a>
+                            </td>
                         </tr>
+                        {% endif %}
                         <tr>
                             <th>Immeuble:</th>
                             <td>{{ quittance.contrat.appartement.immeuble.nom }}</td>
@@ -237,11 +265,16 @@
             <a href="{% url 'quittances:list' %}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Retour à la liste
             </a>
-            <a href="#" class="btn btn-outline-primary">
+            <a href="{% url 'contrats:contrat_update' quittance.contrat.id %}" class="btn btn-outline-primary">
                 <i class="fas fa-file-contract me-2"></i>Voir le contrat
             </a>
-            <a href="{% url 'persons:locataire_detail' quittance.contrat.locataire.id %}" class="btn btn-outline-info">
-                <i class="fas fa-user me-2"></i>Voir le locataire
+            {% if locataire_principal %}
+            <a href="{% url 'persons:locataire_detail' locataire_principal.id %}" class="btn btn-outline-info">
+                <i class="fas fa-user me-2"></i>Voir le locataire principal
+            </a>
+            {% endif %}
+            <a href="{% url 'contrats:contrat_locataires' quittance.contrat.id %}" class="btn btn-outline-success">
+                <i class="fas fa-users me-2"></i>Gérer les locataires
             </a>
         </div>
     </div>

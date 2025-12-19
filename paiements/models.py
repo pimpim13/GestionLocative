@@ -122,7 +122,10 @@ class PaiementLocataire(TimeStampedModel):
         ]
 
     def __str__(self):
-        return f"Paiement {self.contrat.locataire.nom_complet} - {self.mois.strftime('%m/%Y')}"
+        # ✅ CORRECTION : utiliser get_locataire_principal()
+        locataire = self.contrat.get_locataire_principal()
+        nom = locataire.nom_complet if locataire else "Sans locataire"
+        return f"Paiement {nom} - {self.mois.strftime('%m/%Y')}"
 
     @property
     def total(self):

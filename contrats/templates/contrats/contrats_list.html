@@ -4,77 +4,210 @@
 {% block Title %} Contrats {% endblock Title %}
 {% block content %}
 
-
 <div class="container-fluid">
-    <h3  class="h2 text-center">
-        Contrats
+    <h3 class="h2 text-center mb-4">
+        <i class="fas fa-file-contract me-2"></i>Gestion des Contrats
     </h3>
+
     <div class="row mt-4 d-flex justify-content-center">
         <div class="col-lg-12">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th scope="col">Date Début</th>
-                    <th scope="col">Date Fin</th>
-                    <th scope="col">Appartement</th>
-                    <th scope="col">Locataire</th>
-                    <th scope="col">Loyer mensuel</th>
-                    <th scope="col">Charges mensuelles</th>
-                    <th scope="col">Actif</th>
-                    <th class="text-end" scope="col">Actions</th>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Date Début</th>
+                                    <th scope="col">Date Fin</th>
+                                    <th scope="col">Appartement</th>
+                                    <th scope="col">Locataire(s)</th>
+                                    <th scope="col" class="text-end">Loyer mensuel</th>
+                                    <th scope="col" class="text-end">Charges</th>
+                                    <th scope="col" class="text-end">Total</th>
+                                    <th scope="col" class="text-center">Statut</th>
+                                    <th class="text-end" scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contrat in contrats %}
+                                    <tr>
+                                        <td>
+                                            <span class="text-nowrap">
+                                                {{ contrat.date_debut|date:"d/m/Y" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if contrat.date_fin %}
+                                                <span class="text-nowrap">
+                                                    {{ contrat.date_fin|date:"d/m/Y" }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Indéterminée</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ contrat.appartement }}</strong>
+                                        </td>
+                                        <td>
+                                            {% with locataires=contrat.get_tous_locataires %}
+                                                {% if locataires.count == 1 %}
+                                                    <span>{{ locataires.first.nom_complet }}</span>
+                                                {% elif locataires.count == 2 %}
+                                                    <span>{{ locataires.0.nom_complet }} et {{ locataires.1.nom_complet }}</span>
+                                                {% elif locataires.count > 2 %}
+                                                    <span>{{ locataires.0.nom_complet }}
+                                                        <span class="badge bg-secondary ms-1">
+                                                            +{{ locataires.count|add:"-1" }}
+                                                        </span>
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-danger">
+                                                        <i class="fas fa-exclamation-triangle me-1"></i>Aucun locataire
+                                                    </span>
+                                                {% endif %}
+                                            {% endwith %}
+                                            <a href="{% url 'contrats:contrat_locataires' contrat.id %}"
+                                               class="btn btn-sm btn-link p-0 ms-2"
+                                               title="Gérer les locataires">
+                                                <i class="fas fa-users"></i>
+                                            </a>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            {{ contrat.loyer_mensuel|floatformat:2 }} €
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            {{ contrat.charges_mensuelles|floatformat:2 }} €
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <strong>{{ contrat.loyer_total|floatformat:2 }} €</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if contrat.actif %}
+                                                <span class="badge bg-success">
+                                                    <i class="fa fa-check-circle"></i> Actif
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fa fa-times-circle"></i> Inactif
+                                                </span>
+                                            {% endif %}
+                                            {% if contrat.preavis_donne %}
+                                                <br>
+                                                <span class="badge bg-warning text-dark mt-1">
+                                                    <i class="fas fa-bell"></i> Préavis
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'contrats:contrat_locataires' contrat.id %}"
+                                                   class="btn btn-outline-info"
+                                                   title="Gérer les locataires">
+                                                    <i class="fas fa-users"></i>
+                                                </a>
+                                                <a href="{% url 'contrats:contrat_update' contrat.id %}"
+                                                   class="btn btn-outline-primary"
+                                                   title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'contrats:contrat_delete' contrat.id %}"
+                                                   class="btn btn-outline-danger"
+                                                   title="Supprimer"
+                                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce contrat ?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="9" class="text-center py-5">
+                                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                            <p class="text-muted">Aucun contrat enregistré</p>
+                                            <a href="{% url 'contrats:contrat_create' %}" class="btn btn-primary">
+                                                <i class="fas fa-plus me-2"></i>Créer le premier contrat
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-                </tr>
-                </thead>
-                <tbody>
-                {% for contrat in contrats %}
-                    <tr>
-                        <td> {{ contrat.date_debut|date:"d/m/Y" }} </td>
-                        <td> {{ contrat.date_fin|date:"d/m/Y" }} </td>
-                        <td> {{ contrat.appartement }} </td>
-                        <td> {{ contrat.locataire }} </td>
-                        <td class="text-end"> {{ contrat.loyer_mensuel }} </td>
-                        <td class="text-end"> {{ contrat.charges_mensuelles }} </td>
-                        <td>
-                            {% if contrat.actif %}
-                                <i class="fa fa-check-circle" style="color: green;"></i>
-                            {% else %}
-                                <i class="fa fa-times-circle" style="color: red;"></i>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-primary btn-sm" value="{{ contrat.id }}">
-                                <a class="text-light" href="{% url 'contrats:contrat_update' contrat.id  %}">Modifier</a>
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" value="{{ contrat.id }}">
-                                <a class="text-light" href="{% url 'contrats:contrat_delete' contrat.id  %}">Supprimer</a>
-                            </button>
-                        </td>
+            <!-- Boutons d'action -->
+            <div class="mt-3">
+                <a href="{% url 'contrats:contrat_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nouveau Contrat
+                </a>
+                <a href="{% url 'home' %}" class="btn btn-success">
+                    <i class="fas fa-home me-2"></i>Retour à l'accueil
+                </a>
+            </div>
 
-                    </tr>
-                {% endfor %}
-                    <tr>
-                        <th>
-
-                        </th>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-            <button type="button" class="btn btn-primary btn-sm" value="">
-                <a class="text-light" href="{% url 'contrats:contrat_create' %}">Nouveau</a>
-            </button>
-            <button type="button" class="btn btn-success btn-sm" value="">
-                <a class="text-light" href="{% url 'home' %}">Retour</a>
-            </button>
+            <!-- Statistiques rapides (optionnel) -->
+            {% if contrats %}
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Contrats</h5>
+                            <h2>{{ contrats.count }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Contrats Actifs</h5>
+                            <h2>{{ contrats|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Avec Préavis</h5>
+                            <h2>
+                                {% with preavis_count=0 %}
+                                    {% for c in contrats %}
+                                        {% if c.preavis_donne %}
+                                            {{ preavis_count|add:1 }}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Loyers Totaux</h5>
+                            <h2>
+                                {% widthratio contrats.count 2 1000 %} €
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Confirmation avant suppression
+    document.querySelectorAll('a[href*="delete"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (!this.onclick && !confirm('Êtes-vous sûr de vouloir supprimer ce contrat ?')) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}
