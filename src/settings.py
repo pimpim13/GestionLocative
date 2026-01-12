@@ -1,3 +1,5 @@
+# src/settings.py
+
 """
 Django settings for src project.
 

@@ -8,9 +8,9 @@ app_name = 'accounts'
 
 urlpatterns = [
 
-    path('login/', custom_login_view, name='login'),
-    path('logout/', custom_logout_view, name='logout'),
-    path('profile/', profile_view, name='profile'),
-    path('users/create/', create_user_view, name='create_user'),
+    # path('login/', custom_login_view, name='login'),
+    # path('logout/', custom_logout_view, name='logout'),
+    # path('profile/', profile_view, name='profile'),
+    # path('users/create/', create_user_view, name='create_user'),
 
     ]

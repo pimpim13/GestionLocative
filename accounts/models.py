@@ -1,7 +1,5 @@
 #accounts.models.py
 
-from time import timezone
-from datetime import datetime
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.validators import RegexValidator

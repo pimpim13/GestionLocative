@@ -57,26 +57,28 @@
         </div>
         <div class="col-md-4">
             <div class="card text-white bg-success">
-                <div class="card-body text-center">
+                <div class="card-body text-start">
                     <h6 class="card-title">Loyers perçus</h6>
                     <h3>
                         {% for total in totaux %}
-                            {{ total.total_loyer|floatformat:2 }}
+
+                            {{ total.annee }} :
+                            {{ total.total_loyer|floatformat:2 }}  € <br>
                         {% endfor %}
-                        €
                     </h3>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card text-white bg-info">
-                <div class="card-body text-center">
+                <div class="card-body text-start">
                     <h6 class="card-title">Charges perçues</h6>
                     <h3>
                         {% for total in totaux %}
-                            {{ total.total_charges|floatformat:2 }}
+                            {{ total.annee }} :
+                            {{ total.total_charges|floatformat:2 }} € <br>
                         {% endfor %}
-                        €
+
                     </h3>
                 </div>
             </div>

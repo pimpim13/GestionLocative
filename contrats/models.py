@@ -157,21 +157,21 @@ class Contrats(TimeStampedModel):
 
     def get_locataires_display(self, separator=" et "):
         """Affichage formaté des locataires pour les documents"""
-        locataires = self.get_tous_locataires()
+        locataires = list(self.get_tous_locataires())  # Convertir en liste
 
-        if locataires.count() == 0:
+        if len(locataires) == 0:
             return "Aucun locataire"
-        elif locataires.count() == 1:
-            return locataires.first().nom_complet
-        elif locataires.count() == 2:
+        elif len(locataires) == 1:
+            return locataires[0].nom_complet
+        elif len(locataires) == 2:
             return f"{locataires[0].nom_complet} et {locataires[1].nom_complet}"
         else:
             noms = [loc.nom_complet for loc in locataires[:-1]]
-            return f"{', '.join(noms)} et {locataires.last().nom_complet}"
+            return f"{', '.join(noms)} et {locataires[-1].nom_complet}"
 
     def get_locataires_quittance(self):
         """Format spécial pour quittance (chaque nom sur une ligne)"""
-        locataires = self.get_tous_locataires()
+        locataires = list(self.get_tous_locataires())  # ⬅️ Conversion en liste
         return "\n".join([loc.nom_complet for loc in locataires])
 
     def ajouter_locataire(self, locataire, principal=False, role='cotitulaire', ordre=None):
