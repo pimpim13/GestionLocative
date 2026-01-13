@@ -456,3 +456,75 @@ class QuittanceUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('quittances:detail', kwargs={'pk': self.object.pk})
+
+
+# Ajoutez cette vue à votre fichier views.py existant
+
+@login_required
+def delete_quittance_view(request, pk):
+    """Supprimer une quittance"""
+    quittance = get_object_or_404(Quittance, pk=pk)
+
+    if request.method == 'POST':
+        numero = quittance.numero
+
+        try:
+            # Supprimer le fichier PDF associé si existe
+            if quittance.fichier_pdf:
+                quittance.fichier_pdf.delete(save=False)
+
+            # Supprimer la quittance
+            quittance.delete()
+
+            messages.success(
+                request,
+                f'Quittance {numero} supprimée avec succès.'
+            )
+
+            # Rediriger vers la liste ou la page précédente
+            next_url = request.POST.get('next', reverse('quittances:list'))
+            return redirect(next_url)
+
+        except Exception as e:
+            messages.error(
+                request,
+                f'Erreur lors de la suppression de la quittance: {str(e)}'
+            )
+            return redirect('quittances:detail', pk=pk)
+
+    # Si GET, afficher une page de confirmation
+    return render(request, 'quittances/quittance_confirm_delete.html', {
+        'quittance': quittance
+    })
+
+
+# # Alternative avec DeleteView (approche class-based)
+# @method_decorator(login_required, name='dispatch')
+# class QuittanceDeleteView(LoginRequiredMixin, DeleteView):
+#     """Vue pour supprimer une quittance (class-based)"""
+#     model = Quittance
+#     template_name = 'quittances/quittance_confirm_delete.html'
+#     success_url = reverse_lazy('quittances:list')
+#     context_object_name = 'quittance'
+#
+#     def delete(self, request, *args, **kwargs):
+#         quittance = self.get_object()
+#         numero = quittance.numero
+#
+#         # Supprimer le fichier PDF associé
+#         if quittance.fichier_pdf:
+#             quittance.fichier_pdf.delete(save=False)
+#
+#         messages.success(
+#             request,
+#             f'Quittance {numero} supprimée avec succès.'
+#         )
+#
+#         return super().delete(request, *args, **kwargs)
+#
+#     def get_success_url(self):
+#         # Permettre la redirection personnalisée
+#         next_url = self.request.POST.get('next')
+#         if next_url:
+#             return next_url
+#         return self.success_url

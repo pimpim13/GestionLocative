@@ -155,11 +155,6 @@
                                    title="Détails">
                                     <i class="fas fa-info-circle"></i>
                                 </a>
-                                <a href="{% url 'quittances:delete' quittance.pk %}?next={{ request.get_full_path|urlencode }}"
-                                   class="btn btn-danger btn-sm"
-                                   title="Supprimer">
-                                    <i class="fas fa-trash"></i>
-                                </a>
                             </div>
                         </td>
                     </tr>

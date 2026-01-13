@@ -5,7 +5,7 @@ from decimal import Decimal
 from datetime import date
 
 from accounts.models import TimeStampedModel
-
+from contrats.models import Contrats
 
 # =============================================================================
 # MODÈLES POUR LES PAIEMENTS DES LOCATAIRES
@@ -32,6 +32,17 @@ class PaiementLocataire(TimeStampedModel):
         decimal_places=2,
         verbose_name="Loyer payé",
         validators=[MinValueValidator(Decimal('0.01'))]
+    )
+
+    loyer_attendu = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        verbose_name="Loyer payé",
+        validators=[MinValueValidator(Decimal('0.01'))],
+        null=True,
+        blank=True
+
+
     )
     charges = models.DecimalField(
         max_digits=8,
@@ -163,6 +174,10 @@ class PaiementLocataire(TimeStampedModel):
         # Définir automatiquement la date d'échéance si non fournie
         if not self.date_echeance:
             self.date_echeance = self.mois.replace(day=self.contrat.jour_echeance)
+
+        if not self.loyer_attendu:
+            loyer = Contrats.objects.get(id=self.contrat.id).loyer_mensuel
+            self.loyer_attendu = loyer
 
         # Ajuster le statut selon le montant
         if self.total < self.montant_attendu:

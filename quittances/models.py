@@ -1,9 +1,11 @@
 # quittances/models.py
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.db.models import Max
 from decimal import Decimal
 from datetime import date
 from accounts.models import TimeStampedModel
+
 
 def quittance_upload_path(instance, filename):
     # instance.dt est un objet date
@@ -12,6 +14,7 @@ def quittance_upload_path(instance, filename):
 
     # Exemple : 'quittances/2025/03/monfichier.pdf'
     return f"quittances/{year}/{month:02d}/{filename}"
+
 
 class Quittance(TimeStampedModel):
     """Modèle pour les quittances de loyer"""
@@ -106,13 +109,30 @@ class Quittance(TimeStampedModel):
             year = self.mois.year
             month = self.mois.month
 
-            # Compter les quittances existantes pour ce mois
-            count = Quittance.objects.filter(
-                mois__year=year,
-                mois__month=month
-            ).count() + 1
+            # ✅ CORRECTION : Utiliser le numéro maximum existant + 1
+            # au lieu de count() pour éviter les doublons
+            prefix = f"Q{year}{month:02d}"
 
-            self.numero = f"Q{year}{month:02d}{count:04d}"
+            # Récupérer le dernier numéro pour ce mois
+            last_quittance = Quittance.objects.filter(
+                numero__startswith=prefix
+            ).aggregate(Max('numero'))
+
+            last_numero = last_quittance['numero__max']
+
+            if last_numero:
+                # Extraire le compteur du dernier numéro (les 4 derniers chiffres)
+                try:
+                    last_count = int(last_numero[-4:])
+                    next_count = last_count + 1
+                except (ValueError, IndexError):
+                    # Si l'extraction échoue, recommencer à 1
+                    next_count = 1
+            else:
+                # Aucune quittance pour ce mois, commencer à 1
+                next_count = 1
+
+            self.numero = f"{prefix}{next_count:04d}"
 
         # Calcul automatique du total si non fourni
         if not self.total:

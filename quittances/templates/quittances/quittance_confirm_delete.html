@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block Title %}Supprimer la quittance {% endblock Title %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-danger mt-5">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmation de suppression
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Attention !</strong> Cette action est irréversible.
+                    </div>
+
+                    <h5 class="mb-3">Êtes-vous sûr de vouloir supprimer cette quittance ?</h5>
+
+                    <!-- Détails de la quittance -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <th width="40%">Numéro :</th>
+                                    <td><strong>{{ quittance.numero }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Période :</th>
+                                    <td>{{ quittance.mois|date:"F Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Locataire :</th>
+                                    <td>{{ quittance.contrat.get_locataires_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Immeuble :</th>
+                                    <td>{{ quittance.contrat.appartement.immeuble.nom }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Appartement :</th>
+                                    <td>N° {{ quittance.contrat.appartement.numero }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total :</th>
+                                    <td><strong>{{ quittance.total }} €</strong></td>
+                                </tr>
+                                <tr>
+                                    <th>Statut :</th>
+                                    <td>
+                                        {% if quittance.envoyee %}
+                                            <span class="badge bg-success">Envoyée le {{ quittance.date_envoi|date:"d/m/Y" }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Non envoyée</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Informations supplémentaires -->
+                    <div class="alert alert-info">
+                        <strong>Conséquences de la suppression :</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>La quittance sera définitivement supprimée de la base de données</li>
+                            <li>Le fichier PDF associé sera supprimé du serveur</li>
+                            {% if quittance.paiement %}
+                            <li><strong>Le paiement associé ne sera PAS supprimé</strong> (seulement le lien avec la quittance)</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Formulaire de confirmation -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% url 'quittances:detail' quittance.pk %}{% endif %}"
+                               class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

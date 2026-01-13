@@ -27,4 +27,9 @@ urlpatterns = [
     path('creer/', views.QuittanceCreateView.as_view(), name='create'),
     path('creer/<int:contrat_id>/', views.QuittanceCreateView.as_view(), name='create_contrat'),
     path('<int:pk>/modifier/', views.QuittanceUpdateView.as_view(), name='update'),
+
+    # Suppression
+    path('<int:pk>/supprimer/', views.delete_quittance_view, name='delete'),
+    # OU si vous utilisez la DeleteView :
+    # path('<int:pk>/supprimer/', views.QuittanceDeleteView.as_view(), name='delete'),
 ]

@@ -190,8 +190,9 @@ class DatabaseManager:
                         'fields': obj_data['fields']
                     }
 
-                    # Désérialisation
-                    for deserialized_obj in serializers.deserialize('json', [obj_data_clean]):
+                    # Désérialisation - Django attend une CHAÎNE JSON, pas une liste
+                    json_str = json.dumps([obj_data_clean])
+                    for deserialized_obj in serializers.deserialize('json', json_str):
                         deserialized_obj.save()
                         restored_count += 1
 

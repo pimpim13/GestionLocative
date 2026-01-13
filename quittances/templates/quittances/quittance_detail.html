@@ -254,6 +254,16 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- Supprimer la quittance -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <a href="{% url 'quittances:delete' quittance.pk %}?next={% url 'quittances:list' %}"
+                               class="btn btn-danger w-100">
+                                <i class="fas fa-trash me-2"></i>Supprimer cette quittance
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
