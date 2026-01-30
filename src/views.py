@@ -31,7 +31,7 @@ class DashboardView(TemplateView):
         context.update({
             'total_immeubles': Immeuble.objects.count(),
             'total_appartements': Appartement.objects.count(),
-            'appartements_loues': Appartement.objects.filter(loue=True).count(),
+            'appartements_loues': Appartement.objects.count(),
             'total_locataires': Locataires.objects.filter(actif=True).count(),
         })
 

@@ -87,6 +87,11 @@ $(document).ready(function() {
                             <li><a class="dropdown-item" href="{% url 'quittances:list' %}">Quittances</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'paiements:depense_liste' %}">
+                            <i class="fas fa-file-invoice-dollar"></i> Dépenses
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Menu utilisateur (connecté) -->

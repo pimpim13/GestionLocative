@@ -81,7 +81,7 @@ def Appartement_delete_item(request, pk):
 
 class AppartementListView(ListView):
     model = Appartement  # ✅ Ajout du model
-    fields = ['immeuble', 'numero', 'etage', 'loue']
+    fields = ['immeuble', 'numero', 'etage', ] #'loue'
     template_name = 'immeuble/appartement_list.html'
     context_object_name = 'appartements'
 

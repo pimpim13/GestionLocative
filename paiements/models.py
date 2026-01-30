@@ -460,11 +460,11 @@ class RepartitionDepense(TimeStampedModel):
         max_length=20,
         choices=[
             ('surface', 'Par surface'),
-            ('tantieme', 'Par tantièmes'),
+            ('milliemes', 'Par milliemes'),
             ('forfait', 'Forfait'),
             ('personnalise', 'Personnalisé'),
         ],
-        default='surface'
+        default='milliemes'
     )
 
     base_calcul = models.DecimalField(

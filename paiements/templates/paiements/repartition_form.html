@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Répartition manuelle{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- En-tête -->
+            <div class="mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'paiements:depense_liste' %}">Dépenses</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'paiements:depense_detail' depense.pk %}">{{ depense.designation }}</a></li>
+                        <li class="breadcrumb-item active">Répartition manuelle</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 mb-4">
+                    <i class="fas fa-edit"></i>
+                    Ajouter une répartition manuelle
+                </h1>
+            </div>
+
+            <!-- Résumé de la dépense -->
+            <div class="card mb-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Dépense à répartir</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>{{ depense.designation }}</h5>
+                            <p class="mb-0">
+                                <strong>Immeuble:</strong> {{ depense.immeuble.nom }}<br>
+                                <strong>Montant total:</strong> {{ depense.montant_ttc|floatformat:2 }} €
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            {% if reste_a_repartir %}
+                            <div class="text-end">
+                                <small class="text-muted">Reste à répartir</small>
+                                <div class="h4 mb-0">{{ reste_a_repartir|floatformat:2 }} €</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informations de répartition</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="repartitionForm">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Appartement -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.appartement.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.appartement }}
+                            <small class="text-muted d-block mt-1">
+                                Sélectionnez l'appartement qui doit supporter cette charge
+                            </small>
+                            {% if form.appartement.errors %}
+                                <div class="text-danger small">{{ form.appartement.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Mode de répartition -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.mode_repartition.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.mode_repartition }}
+                            {% if form.mode_repartition.errors %}
+                                <div class="text-danger small">{{ form.mode_repartition.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Base de calcul et Coefficient (conditionnels) -->
+                        <div id="calcul-fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.base_calcul.label }}</label>
+                                    {{ form.base_calcul }}
+                                    <small class="text-muted d-block mt-1">
+                                        Ex: surface en m², tantièmes, etc.
+                                    </small>
+                                    {% if form.base_calcul.errors %}
+                                        <div class="text-danger small">{{ form.base_calcul.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.coefficient.label }}</label>
+                                    {{ form.coefficient }}
+                                    <small class="text-muted d-block mt-1">
+                                        Coefficient multiplicateur
+                                    </small>
+                                    {% if form.coefficient.errors %}
+                                        <div class="text-danger small">{{ form.coefficient.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Montant -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.montant.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.montant }}
+                                <span class="input-group-text">€</span>
+                            </div>
+                            {% if reste_a_repartir %}
+                            <small class="text-muted d-block mt-1">
+                                Maximum disponible: {{ reste_a_repartir|floatformat:2 }} €
+                            </small>
+                            {% endif %}
+                            {% if form.montant.errors %}
+                                <div class="text-danger small">{{ form.montant.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paiements:depense_detail' depense.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Ajouter la répartition
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="card mt-4 border-secondary">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Aide sur les modes de répartition
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>Par surface:</strong> Le montant est calculé en fonction de la surface de l'appartement</li>
+                        <li><strong>Par tantièmes:</strong> Le montant est calculé selon les tantièmes de copropriété</li>
+                        <li><strong>Forfait:</strong> Un montant fixe prédéfini</li>
+                        <li><strong>Personnalisé:</strong> Un montant libre que vous définissez manuellement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modeSelect = document.getElementById('id_mode_repartition');
+    const calculFields = document.getElementById('calcul-fields');
+
+    function toggleCalculFields() {
+        const mode = modeSelect.value;
+        if (mode === 'surface' || mode === 'tantieme' || mode === 'personnalise') {
+            calculFields.style.display = 'block';
+        } else {
+            calculFields.style.display = 'none';
+        }
+    }
+
+    modeSelect.addEventListener('change', toggleCalculFields);
+    toggleCalculFields(); // Initial state
+});
+</script>
+{% endblock %}

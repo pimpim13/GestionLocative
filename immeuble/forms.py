@@ -21,14 +21,14 @@ class AppartementForm(forms.ModelForm):
     class Meta:
         model = Appartement
         fields = [
-            'immeuble', 'numero', 'etage', 'proprietaire' ,'loue',
+            'immeuble', 'numero', 'etage', 'proprietaire' , 'surface', 'milliemes'
         ]
         widgets = {
             'immeuble': forms.Select(attrs={'class': 'form-control'}),
             'numero': forms.TextInput(attrs={'class': 'form-control'}),
             'proprietaire': forms.Select(attrs={'class': 'form-control'}),
             'etage': forms.NumberInput(attrs={'class': 'form-control'}),
-            'loué': forms.CheckboxInput(attrs={'class': 'form-control'}),
+            # 'loué': forms.CheckboxInput(attrs={'class': 'form-control'}),
         }
 
 class ImmeubleSearchForm(forms.Form):

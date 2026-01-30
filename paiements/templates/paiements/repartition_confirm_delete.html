@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer la répartition{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Confirmer la suppression
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Êtes-vous sûr de vouloir supprimer cette répartition ?</p>
+
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">Détails de la répartition</h6>
+                        <hr>
+                        <p class="mb-2">
+                            <strong>Appartement:</strong> {{ repartition.appartement.numero }}<br>
+                            <strong>Montant:</strong> {{ repartition.montant|floatformat:2 }} €<br>
+                            <strong>Mode:</strong> {{ repartition.get_mode_repartition_display }}
+                        </p>
+                        {% if repartition.notes %}
+                        <hr>
+                        <p class="mb-0"><strong>Note:</strong> {{ repartition.notes }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Information:</strong> La dépense sera marquée comme "non répartie" si c'était la dernière répartition.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paiements:depense_detail' repartition.depense.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

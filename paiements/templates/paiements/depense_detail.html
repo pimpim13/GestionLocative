@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détail Dépense{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'paiements:depense_liste' %}">Dépenses</a></li>
+                    <li class="breadcrumb-item active">{{ depense.designation }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">
+                <i class="fas fa-file-invoice-dollar"></i>
+                {{ depense.designation }}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'paiements:depense_update' depense.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Modifier
+            </a>
+            <a href="{% url 'paiements:depense_delete' depense.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne principale -->
+        <div class="col-lg-8">
+            <!-- Informations générales -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Informations générales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Immeuble:</strong><br>
+                            {% if depense.immeuble %}
+                                <a href="#">{{ depense.immeuble.nom }}</a>
+                            {% else %}
+                                <span class="text-muted">Non spécifié</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Appartement:</strong><br>
+                            {% if depense.appartement %}
+                                <a href="#">{{ depense.appartement.numero }}</a>
+                            {% else %}
+                                <span class="text-muted">Charge d'immeuble</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Type de dépense:</strong><br>
+                            <span class="badge bg-secondary">{{ depense.type_depense }}</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Catégorie:</strong><br>
+                            {{ depense.type_depense.get_categorie_display }}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <strong>Description:</strong><br>
+                            {% if depense.description %}
+                                {{ depense.description|linebreaks }}
+                            {% else %}
+                                <span class="text-muted">Aucune description</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fournisseur -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-building"></i> Fournisseur</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Nom:</strong><br>
+                            {{ depense.fournisseur }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>SIRET:</strong><br>
+                            {% if depense.fournisseur_siret %}
+                                {{ depense.fournisseur_siret }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>N° Facture:</strong><br>
+                            {% if depense.numero_facture %}
+                                {{ depense.numero_facture }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Répartition -->
+            {% if depense.repartissable %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-share-alt"></i> Répartition</h5>
+                    {% if not depense.repartie %}
+                    <a href="{% url 'paiements:depense_repartir' depense.pk %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-magic"></i> Répartir automatiquement
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if repartitions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Appartement</th>
+                                    <th>Mode</th>
+                                    <th>Base calcul</th>
+                                    <th class="text-end">Montant</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for repartition in repartitions %}
+                                <tr>
+                                    <td>{{ repartition.appartement.numero }}</td>
+                                    <td>{{ repartition.get_mode_repartition_display }}</td>
+                                    <td>
+                                        {% if repartition.base_calcul %}
+                                            {{ repartition.base_calcul }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">{{ repartition.montant|floatformat:2 }} €</td>
+                                    <td class="text-end">
+                                        <form method="post" action="{% url 'paiements:repartition_delete' repartition.pk %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Supprimer cette répartition ?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-info">
+                                    <th colspan="3">Total réparti</th>
+                                    <th class="text-end">{{ total_reparti|floatformat:2 }} €</th>
+                                    <th></th>
+                                </tr>
+                                {% if reste_a_repartir > 0 %}
+                                <tr class="table-warning">
+                                    <th colspan="3">Reste à répartir</th>
+                                    <th class="text-end">{{ reste_a_repartir|floatformat:2 }} €</th>
+                                    <th></th>
+                                </tr>
+                                {% endif %}
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'paiements:repartition_create' depense.pk %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Ajouter une répartition manuelle
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Cette dépense n'a pas encore été répartie.
+                        <a href="{% url 'paiements:depense_repartir' depense.pk %}" class="alert-link">
+                            Répartir maintenant
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Documents -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-file-pdf"></i> Documents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Facture:</strong><br>
+                            {% if depense.facture %}
+                                <a href="{{ depense.facture.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Télécharger
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Aucune facture</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Justificatif:</strong><br>
+                            {% if depense.justificatif %}
+                                <a href="{{ depense.justificatif.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Télécharger
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Aucun justificatif</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if depense.notes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Notes</h5>
+                </div>
+                <div class="card-body">
+                    {{ depense.notes|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <!-- Montants -->
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-euro-sign"></i> Montants</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Montant HT:</strong>
+                        <div class="h4 text-end">{{ depense.montant_ht|floatformat:2 }} €</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>TVA:</strong>
+                        <div class="h5 text-end">{{ depense.tva|floatformat:2 }} €</div>
+                    </div>
+                    <hr>
+                    <div>
+                        <strong>Montant TTC:</strong>
+                        <div class="h3 text-end text-primary">{{ depense.montant_ttc|floatformat:2 }} €</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar"></i> Dates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Date de dépense:</strong><br>
+                        {{ depense.date_depense|date:"d/m/Y" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Date d'échéance:</strong><br>
+                        {% if depense.date_echeance %}
+                            {{ depense.date_echeance|date:"d/m/Y" }}
+                            {% if depense.est_en_retard %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    {{ depense.jours_retard }} jour(s) de retard
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Date de paiement:</strong><br>
+                        {% if depense.date_paiement %}
+                            {{ depense.date_paiement|date:"d/m/Y" }}
+                        {% else %}
+                            <span class="text-muted">Non payée</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statut et options -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Statut</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Statut:</strong><br>
+                        {% if depense.statut == 'payee' %}
+                            <span class="badge bg-success">Payée</span>
+                        {% elif depense.statut == 'a_payer' %}
+                            <span class="badge bg-warning">À payer</span>
+                        {% elif depense.statut == 'en_attente' %}
+                            <span class="badge bg-info">En attente</span>
+                        {% else %}
+                            <span class="badge bg-danger">Annulée</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Mode de paiement:</strong><br>
+                        {{ depense.get_mode_paiement_display }}
+                    </div>
+                    {% if depense.reference_paiement %}
+                    <div class="mb-3">
+                        <strong>Référence:</strong><br>
+                        {{ depense.reference_paiement }}
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="mb-2">
+                        {% if depense.repartissable %}
+                            <i class="fas fa-check text-success"></i> Répartissable
+                        {% else %}
+                            <i class="fas fa-times text-muted"></i> Non répartissable
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        {% if depense.deductible_impots %}
+                            <i class="fas fa-check text-success"></i> Déductible fiscalement
+                        {% else %}
+                            <i class="fas fa-times text-muted"></i> Non déductible
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métadonnées -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Informations</h5>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <strong>Créée le:</strong><br>
+                        {{ depense.created_at|date:"d/m/Y à H:i" }}
+                    </small>
+                    <hr>
+                    <small class="text-muted">
+                        <strong>Modifiée le:</strong><br>
+                        {{ depense.updated_at|date:"d/m/Y à H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

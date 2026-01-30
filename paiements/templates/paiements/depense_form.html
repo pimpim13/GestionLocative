@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if depense %}Modifier{% else %}Nouvelle{% endif %} Dépense{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .form-section h5 {
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-file-invoice-dollar"></i>
+                {% if depense %}
+                    Modifier la dépense
+                {% else %}
+                    Nouvelle dépense
+                {% endif %}
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <form method="post" enctype="multipart/form-data" id="depenseForm">
+                {% csrf_token %}
+
+                <!-- Erreurs globales -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- Section: Localisation -->
+                <div class="form-section">
+                    <h5><i class="fas fa-map-marker-alt"></i> Localisation</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.immeuble.label }} <span class="text-danger">*</span></label>
+                            {{ form.immeuble }}
+                            {% if form.immeuble.errors %}
+                                <div class="text-danger small">{{ form.immeuble.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.appartement.label }}</label>
+                            {{ form.appartement }}
+                            <small class="text-muted">Optionnel - Laissez vide pour une charge d'immeuble</small>
+                            {% if form.appartement.errors %}
+                                <div class="text-danger small">{{ form.appartement.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Type et description -->
+                <div class="form-section">
+                    <h5><i class="fas fa-info-circle"></i> Type et description</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.type_depense.label }} <span class="text-danger">*</span></label>
+                            {{ form.type_depense }}
+                            {% if form.type_depense.errors %}
+                                <div class="text-danger small">{{ form.type_depense.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.designation.label }} <span class="text-danger">*</span></label>
+                            {{ form.designation }}
+                            {% if form.designation.errors %}
+                                <div class="text-danger small">{{ form.designation.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Montants -->
+                <div class="form-section">
+                    <h5><i class="fas fa-euro-sign"></i> Montants</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.montant_ht.label }} <span class="text-danger">*</span></label>
+                            {{ form.montant_ht }}
+                            {% if form.montant_ht.errors %}
+                                <div class="text-danger small">{{ form.montant_ht.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.tva.label }}</label>
+                            {{ form.tva }}
+                            {% if form.tva.errors %}
+                                <div class="text-danger small">{{ form.tva.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.montant_ttc.label }}</label>
+                            {{ form.montant_ttc }}
+                            <small class="text-muted">Calculé automatiquement</small>
+                            {% if form.montant_ttc.errors %}
+                                <div class="text-danger small">{{ form.montant_ttc.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Dates -->
+                <div class="form-section">
+                    <h5><i class="fas fa-calendar"></i> Dates</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.date_depense.label }} <span class="text-danger">*</span></label>
+                            {{ form.date_depense }}
+                            {% if form.date_depense.errors %}
+                                <div class="text-danger small">{{ form.date_depense.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.date_echeance.label }}</label>
+                            {{ form.date_echeance }}
+                            {% if form.date_echeance.errors %}
+                                <div class="text-danger small">{{ form.date_echeance.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.date_paiement.label }}</label>
+                            {{ form.date_paiement }}
+                            {% if form.date_paiement.errors %}
+                                <div class="text-danger small">{{ form.date_paiement.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Fournisseur -->
+                <div class="form-section">
+                    <h5><i class="fas fa-building"></i> Fournisseur</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.fournisseur.label }} <span class="text-danger">*</span></label>
+                            {{ form.fournisseur }}
+                            {% if form.fournisseur.errors %}
+                                <div class="text-danger small">{{ form.fournisseur.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.fournisseur_siret.label }}</label>
+                            {{ form.fournisseur_siret }}
+                            {% if form.fournisseur_siret.errors %}
+                                <div class="text-danger small">{{ form.fournisseur_siret.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Paiement -->
+                <div class="form-section">
+                    <h5><i class="fas fa-credit-card"></i> Informations de paiement</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.numero_facture.label }}</label>
+                            {{ form.numero_facture }}
+                            {% if form.numero_facture.errors %}
+                                <div class="text-danger small">{{ form.numero_facture.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.mode_paiement.label }}</label>
+                            {{ form.mode_paiement }}
+                            {% if form.mode_paiement.errors %}
+                                <div class="text-danger small">{{ form.mode_paiement.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.reference_paiement.label }}</label>
+                            {{ form.reference_paiement }}
+                            {% if form.reference_paiement.errors %}
+                                <div class="text-danger small">{{ form.reference_paiement.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Statut et options -->
+                <div class="form-section">
+                    <h5><i class="fas fa-cog"></i> Statut et options</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.statut.label }}</label>
+                            {{ form.statut }}
+                            {% if form.statut.errors %}
+                                <div class="text-danger small">{{ form.statut.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                {{ form.repartissable }}
+                                <label class="form-check-label" for="{{ form.repartissable.id_for_label }}">
+                                    {{ form.repartissable.label }}
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                {{ form.deductible_impots }}
+                                <label class="form-check-label" for="{{ form.deductible_impots.id_for_label }}">
+                                    {{ form.deductible_impots.label }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Documents -->
+                <div class="form-section">
+                    <h5><i class="fas fa-file-pdf"></i> Documents</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.facture.label }}</label>
+                            {{ form.facture }}
+                            {% if depense and depense.facture %}
+                                <div class="mt-2">
+                                    <a href="{{ depense.facture.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> Voir la facture actuelle
+                                    </a>
+                                </div>
+                            {% endif %}
+                            {% if form.facture.errors %}
+                                <div class="text-danger small">{{ form.facture.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.justificatif.label }}</label>
+                            {{ form.justificatif }}
+                            {% if depense and depense.justificatif %}
+                                <div class="mt-2">
+                                    <a href="{{ depense.justificatif.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> Voir le justificatif actuel
+                                    </a>
+                                </div>
+                            {% endif %}
+                            {% if form.justificatif.errors %}
+                                <div class="text-danger small">{{ form.justificatif.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Notes -->
+                <div class="form-section">
+                    <h5><i class="fas fa-sticky-note"></i> Notes</h5>
+                    <div class="mb-3">
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paiements:depense_liste' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if depense %}Enregistrer les modifications{% else %}Créer la dépense{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calcul automatique du TTC
+    const htInput = document.getElementById('id_montant_ht');
+    const tvaInput = document.getElementById('id_tva');
+    const ttcInput = document.getElementById('id_montant_ttc');
+
+    function calculerTTC() {
+        const ht = parseFloat(htInput.value) || 0;
+        const tva = parseFloat(tvaInput.value) || 0;
+        const ttc = ht + tva;
+        ttcInput.value = ttc.toFixed(2);
+    }
+
+    htInput.addEventListener('input', calculerTTC);
+    tvaInput.addEventListener('input', calculerTTC);
+
+    // Charger les appartements selon l'immeuble
+    const immeubleSelect = document.getElementById('id_immeuble');
+    const appartementSelect = document.getElementById('id_appartement');
+
+    immeubleSelect.addEventListener('change', function() {
+        const immeubleId = this.value;
+        if (immeubleId) {
+            fetch(`{% url 'paiements:load_appartements' %}?immeuble_id=${immeubleId}`)
+                .then(response => response.json())
+                .then(data => {
+                    appartementSelect.innerHTML = '<option value="">---------</option>';
+                    data.results.forEach(appt => {
+                        const option = document.createElement('option');
+                        option.value = appt.id;
+                        option.textContent = appt.text;
+                        appartementSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+});
+</script>
+{% endblock %}

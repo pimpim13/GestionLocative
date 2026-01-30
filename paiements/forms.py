@@ -7,6 +7,16 @@ from datetime import date
 from calendar import monthrange
 
 
+from django.core.exceptions import ValidationError
+from decimal import Decimal
+from .models import (
+    TypeDepense,
+    DepenseProprietaire,
+    RepartitionDepense
+)
+from immeuble.models import Immeuble, Appartement
+
+
 class PaiementLocataireForm(forms.ModelForm):
     class Meta:
         model = PaiementLocataire
@@ -308,3 +318,362 @@ class PaiementLocataireForm(forms.ModelForm):
     def get_warnings(self):
         """Récupérer les avertissements"""
         return getattr(self, '_warnings', [])
+
+
+class TypeDepenseForm(forms.ModelForm):
+    """Formulaire pour créer/modifier un type de dépense"""
+
+    class Meta:
+        model = TypeDepense
+        fields = [
+            'nom', 'description', 'categorie',
+            'recurrent', 'deductible_fiscalement', 'actif'
+        ]
+        widgets = {
+            'nom': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: Entretien ascenseur'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Description détaillée (optionnel)'
+            }),
+            'categorie': forms.Select(attrs={'class': 'form-select'}),
+            'recurrent': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'deductible_fiscalement': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class DepenseProprietaireForm(forms.ModelForm):
+    """Formulaire pour créer/modifier une dépense propriétaire"""
+
+    class Meta:
+        model = DepenseProprietaire
+        fields = [
+            'immeuble', 'appartement', 'type_depense',
+            'designation', 'description',
+            'montant_ht', 'tva', 'montant_ttc',
+            'date_depense', 'date_paiement', 'date_echeance',
+            'fournisseur', 'fournisseur_siret',
+            'numero_facture', 'mode_paiement', 'reference_paiement',
+            'statut', 'repartissable', 'deductible_impots',
+            'facture', 'justificatif', 'notes'
+        ]
+        widgets = {
+            'immeuble': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_immeuble'
+            }),
+            'appartement': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_appartement'
+            }),
+            'type_depense': forms.Select(attrs={'class': 'form-select'}),
+            'designation': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: Réparation chaudière'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Description détaillée'
+            }),
+            'montant_ht': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01',
+                'id': 'id_montant_ht'
+            }),
+            'tva': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+                'id': 'id_tva'
+            }),
+            'montant_ttc': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01',
+                'id': 'id_montant_ttc',
+                'readonly': True
+            }),
+            'date_depense': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'date_paiement': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'date_echeance': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'fournisseur': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nom du fournisseur'
+            }),
+            'fournisseur_siret': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '14 chiffres'
+            }),
+            'numero_facture': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'N° facture'
+            }),
+            'mode_paiement': forms.Select(attrs={'class': 'form-select'}),
+            'reference_paiement': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Référence'
+            }),
+            'statut': forms.Select(attrs={'class': 'form-select'}),
+            'repartissable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'deductible_impots': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'facture': forms.FileInput(attrs={'class': 'form-control'}),
+            'justificatif': forms.FileInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Rendre appartement optionnel et filtrer selon l'immeuble
+        self.fields['appartement'].required = False
+
+        # Si un immeuble est sélectionné, filtrer les appartements
+        if 'immeuble' in self.data:
+            try:
+                immeuble_id = int(self.data.get('immeuble'))
+                self.fields['appartement'].queryset = Appartement.objects.filter(
+                    immeuble_id=immeuble_id
+                )
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.immeuble:
+            self.fields['appartement'].queryset = Appartement.objects.filter(
+                immeuble=self.instance.immeuble
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        montant_ht = cleaned_data.get('montant_ht')
+        tva = cleaned_data.get('tva')
+        montant_ttc = cleaned_data.get('montant_ttc')
+
+        # Calculer automatiquement le TTC
+        if montant_ht and tva is not None:
+            calculated_ttc = montant_ht + tva
+            cleaned_data['montant_ttc'] = calculated_ttc
+
+        # Vérifier cohérence des montants
+        if montant_ht and montant_ttc and tva is not None:
+            if montant_ttc < montant_ht:
+                raise ValidationError(
+                    "Le montant TTC ne peut pas être inférieur au montant HT"
+                )
+
+        # Vérifier que l'appartement appartient à l'immeuble
+        appartement = cleaned_data.get('appartement')
+        immeuble = cleaned_data.get('immeuble')
+        if appartement and immeuble:
+            if appartement.immeuble != immeuble:
+                raise ValidationError(
+                    "L'appartement sélectionné n'appartient pas à cet immeuble"
+                )
+
+        return cleaned_data
+
+
+class RepartitionDepenseForm(forms.ModelForm):
+    """Formulaire pour répartir une dépense"""
+
+    class Meta:
+        model = RepartitionDepense
+        fields = [
+            'appartement', 'montant', 'mode_repartition',
+            'base_calcul', 'coefficient', 'notes'
+        ]
+        widgets = {
+            'appartement': forms.Select(attrs={'class': 'form-select'}),
+            'montant': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01',
+                'id': 'id_montant_repartition'
+            }),
+            'mode_repartition': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_mode_repartition'
+            }),
+            'base_calcul': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.0001',
+                'id': 'id_base_calcul'
+            }),
+            'coefficient': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.0001'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2
+            }),
+        }
+
+    def __init__(self, *args, depense=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.depense = depense
+
+        # Rendre base_calcul et coefficient optionnels
+        self.fields['base_calcul'].required = False
+        self.fields['coefficient'].required = False
+
+        # Filtrer les appartements selon l'immeuble de la dépense
+        if depense and depense.immeuble:
+            # Exclure les appartements déjà dans une répartition
+            appartements_deja_repartis = RepartitionDepense.objects.filter(
+                depense=depense
+            ).values_list('appartement_id', flat=True)
+
+            # Récupérer les appartements qui ont un contrat actif
+            from contrats.models import Contrats
+            appartements_avec_contrat = Contrats.objects.filter(
+                appartement__immeuble=depense.immeuble,
+                actif=True
+            ).values_list('appartement_id', flat=True).distinct()
+
+            self.fields['appartement'].queryset = Appartement.objects.filter(
+                immeuble=depense.immeuble,
+                # id__in=appartements_avec_contrat
+            ).exclude(
+                id__in=appartements_deja_repartis
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        montant = cleaned_data.get('montant')
+
+        # Vérifier que le montant ne dépasse pas le reste à répartir
+        if self.depense and montant:
+            repartitions_existantes = RepartitionDepense.objects.filter(
+                depense=self.depense
+            ).exclude(pk=self.instance.pk if self.instance.pk else None)
+
+            total_deja_reparti = sum(r.montant for r in repartitions_existantes)
+            reste_disponible = self.depense.montant_ttc - total_deja_reparti
+
+            if montant > reste_disponible:
+                raise ValidationError(
+                    f"Le montant saisi ({montant}€) dépasse le reste à répartir ({reste_disponible}€)"
+                )
+
+        return cleaned_data
+
+
+class RepartitionAutomatiqueForm(forms.Form):
+    """Formulaire pour répartition automatique d'une dépense"""
+
+    mode_repartition = forms.ChoiceField(
+        label="Mode de répartition",
+        choices=[
+            ('surface', 'Par surface'),
+            ('milliemes', 'Par millièmes'),
+            ('egalitaire', 'Égalitaire'),
+        ],
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'})
+    )
+
+    appartements = forms.ModelMultipleChoiceField(
+        label="Appartements concernés",
+        queryset=Appartement.objects.none(),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+        required=False
+    )
+
+    tous_appartements = forms.BooleanField(
+        label="Tous les appartements de l'immeuble",
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    def __init__(self, *args, depense=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.depense = depense
+
+        if depense and depense.immeuble:
+            self.fields['appartements'].queryset = Appartement.objects.filter(
+                immeuble=depense.immeuble
+                # loue=True
+            )
+
+
+class FiltreDepensesForm(forms.Form):
+    """Formulaire de filtrage des dépenses"""
+
+    immeuble = forms.ModelChoiceField(
+        queryset=Immeuble.objects.all(),
+        required=False,
+        empty_label="Tous les immeubles",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    type_depense = forms.ModelChoiceField(
+        queryset=TypeDepense.objects.filter(actif=True),
+        required=False,
+        empty_label="Tous les types",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    categorie = forms.ChoiceField(
+        choices=[('', 'Toutes les catégories')] + TypeDepense._meta.get_field('categorie').choices,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    statut = forms.ChoiceField(
+        choices=[('', 'Tous les statuts')] + DepenseProprietaire._meta.get_field('statut').choices,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    date_debut = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    date_fin = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+
+    repartissable = forms.NullBooleanField(
+        required=False,
+        widget=forms.Select(
+            choices=[
+                ('', 'Toutes'),
+                ('true', 'Répartissables uniquement'),
+                ('false', 'Non répartissables uniquement')
+            ],
+            attrs={'class': 'form-select'}
+        )
+    )
+
+    recherche = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Rechercher...'
+        })
+    )

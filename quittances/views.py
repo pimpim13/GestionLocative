@@ -38,12 +38,32 @@ class QuittanceListView(ListView):
     context_object_name = 'quittances'
     paginate_by = 20
 
+    def get(self, request, *args, **kwargs):
+        # Sauvegarder les filtres en session
+        if request.GET:
+            # Convertir QueryDict en dict normal pour la session
+            filters = {}
+            for key in request.GET:
+                filters[key] = request.GET.get(key)
+            request.session['quittance_list_filters'] = filters
+
+        return super().get(request, *args, **kwargs)
     def get_queryset(self):
         queryset = (Quittance.objects.select_related(
             'contrat__appartement__immeuble'
         ).prefetch_related(
             'contrat__locataires'
         ).order_by('-mois', '-date_generation'))
+
+        # Récupérer les filtres depuis la session si pas dans GET
+        if not self.request.GET and 'quittance_list_filters' in self.request.session:
+            # Restaurer les filtres depuis la session
+            saved_filters = self.request.session['quittance_list_filters']
+            # Créer un QueryDict mutable
+            self.request.GET = QueryDict(mutable=True)
+            for key, value in saved_filters.items():
+                self.request.GET[key] = value
+            self.request.GET._mutable = False
 
         # Filtres
         search = self.request.GET.get('search')
@@ -85,6 +105,15 @@ class QuittanceListView(ListView):
         context = super().get_context_data(**kwargs)
         context['immeubles'] = Immeuble.objects.all()
         context['search_form'] = QuittanceSearchForm(self.request.GET)
+
+        # Préparer les paramètres pour le template
+        filters_dict = {}
+        if 'quittance_list_filters' in self.request.session:
+            filters_dict = self.request.session['quittance_list_filters']
+
+        from urllib.parse import urlencode
+        context['query_params'] = urlencode(filters_dict)
+
         context['current_filters'] = {
             'search': self.request.GET.get('search', ''),
             'immeuble': self.request.GET.get('immeuble', ''),
@@ -121,6 +150,11 @@ class QuittanceDetailView(DetailView):
         locataire_principal = self.object.contrat.get_locataire_principal()
         if locataire_principal:
             context['locataire_principal'] = locataire_principal
+
+        # ✅ Récupérer les filtres depuis la session
+        filters_dict = self.request.session.get('quittance_list_filters', {})
+        from urllib.parse import urlencode
+        context['query_params'] = urlencode(filters_dict)
 
         return context
 

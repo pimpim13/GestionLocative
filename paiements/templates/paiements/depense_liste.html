@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dépenses Propriétaires{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Dépenses Propriétaires
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'paiements:depense_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle dépense
+            </a>
+            <a href="{% url 'paiements:type_depense_liste' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-tags"></i> Types
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total dépenses</h6>
+                    <h3 class="mb-0">{{ stats.total|default:0|floatformat:2 }} €</h3>
+                    <small class="text-muted">{{ stats.count }} dépenses</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">À payer</h6>
+                    <h3 class="mb-0 text-warning">{{ stats.a_payer|default:0|floatformat:2 }} €</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Payées</h6>
+                    <h3 class="mb-0 text-success">{{ stats.payees|default:0|floatformat:2 }} €</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Moyenne</h6>
+                    <h3 class="mb-0 text-info">
+                        {% if stats.count > 0 %}
+                            0.00
+                        {% else %}
+                            0.00 €
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-filter"></i> Filtres
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    {{ filtre_form.immeuble }}
+                </div>
+                <div class="col-md-2">
+                    {{ filtre_form.type_depense }}
+                </div>
+                <div class="col-md-2">
+                    {{ filtre_form.categorie }}
+                </div>
+                <div class="col-md-2">
+                    {{ filtre_form.statut }}
+                </div>
+                <div class="col-md-3">
+                    {{ filtre_form.recherche }}
+                </div>
+                <div class="col-md-2">
+                    {{ filtre_form.date_debut.label_tag }}
+                    {{ filtre_form.date_debut }}
+                </div>
+                <div class="col-md-2">
+                    {{ filtre_form.date_fin.label_tag }}
+                    {{ filtre_form.date_fin }}
+                </div>
+                <div class="col-md-2">
+                    {{ filtre_form.repartissable }}
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                    <a href="{% url 'paiements:depense_liste' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des dépenses -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Désignation</th>
+                            <th>Immeuble</th>
+                            <th>Type</th>
+                            <th>Fournisseur</th>
+                            <th class="text-end">Montant TTC</th>
+                            <th>Statut</th>
+                            <th>Répartition</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for depense in depenses %}
+                        <tr>
+                            <td>{{ depense.date_depense|date:"d/m/Y" }}</td>
+                            <td>
+                                <strong>{{ depense.designation }}</strong>
+                                {% if depense.numero_facture %}
+                                    <br><small class="text-muted">Facture: {{ depense.numero_facture }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if depense.immeuble %}
+                                    {{ depense.immeuble.nom }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ depense.type_depense.get_categorie_display }}
+                                </span>
+                            </td>
+                            <td>{{ depense.fournisseur }}</td>
+                            <td class="text-end">
+                                <strong>{{ depense.montant_ttc|floatformat:2 }} €</strong>
+                            </td>
+                            <td>
+                                {% if depense.statut == 'payee' %}
+                                    <span class="badge bg-success">Payée</span>
+                                {% elif depense.statut == 'a_payer' %}
+                                    <span class="badge bg-warning">À payer</span>
+                                {% elif depense.statut == 'en_attente' %}
+                                    <span class="badge bg-info">En attente</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Annulée</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if depense.repartissable %}
+                                    {% if depense.repartie %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check"></i> Répartie
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock"></i> À répartir
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'paiements:depense_detail' depense.pk %}"
+                                       class="btn btn-outline-primary"
+                                       title="Détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'paiements:depense_update' depense.pk %}"
+                                       class="btn btn-outline-secondary"
+                                       title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if depense.repartissable and not depense.repartie %}
+                                    <a href="{% url 'paiements:depense_repartir' depense.pk %}"
+                                       class="btn btn-outline-success"
+                                       title="Répartir">
+                                        <i class="fas fa-share-alt"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-5">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>Aucune dépense trouvée</p>
+                                <a href="{% url 'paiements:depense_create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Créer une dépense
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

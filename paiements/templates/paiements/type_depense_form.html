@@ -1,0 +1,138 @@
+>{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if type_depense %}Modifier{% else %}Nouveau{% endif %} Type de Dépense{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-tag"></i>
+                {% if type_depense %}
+                    Modifier le type de dépense
+                {% else %}
+                    Nouveau type de dépense
+                {% endif %}
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Nom -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.nom.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nom }}
+                            <small class="text-muted">Nom unique du type de dépense</small>
+                            {% if form.nom.errors %}
+                                <div class="text-danger small">{{ form.nom.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Catégorie -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.categorie.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.categorie }}
+                            {% if form.categorie.errors %}
+                                <div class="text-danger small">{{ form.categorie.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            <small class="text-muted">Description détaillée (optionnel)</small>
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Options -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Options</strong></label>
+
+                            <div class="form-check mb-2">
+                                {{ form.recurrent }}
+                                <label class="form-check-label" for="{{ form.recurrent.id_for_label }}">
+                                    {{ form.recurrent.label }}
+                                </label>
+                                <br>
+                                <small class="text-muted">
+                                    Cochez si cette dépense revient régulièrement (ex: charges mensuelles)
+                                </small>
+                            </div>
+
+                            <div class="form-check mb-2">
+                                {{ form.deductible_fiscalement }}
+                                <label class="form-check-label" for="{{ form.deductible_fiscalement.id_for_label }}">
+                                    {{ form.deductible_fiscalement.label }}
+                                </label>
+                                <br>
+                                <small class="text-muted">
+                                    Permet de catégoriser les dépenses déductibles des impôts
+                                </small>
+                            </div>
+
+                            <div class="form-check">
+                                {{ form.actif }}
+                                <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                    {{ form.actif.label }}
+                                </label>
+                                <br>
+                                <small class="text-muted">
+                                    Les types inactifs n'apparaissent plus dans les formulaires
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paiements:type_depense_liste' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if type_depense %}Enregistrer{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Exemples -->
+            {% if not type_depense %}
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb"></i> Exemples de types de dépenses
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>Entretien:</strong> Maintenance chaudière, nettoyage, jardinage</li>
+                        <li><strong>Charges:</strong> Eau, électricité parties communes, ordures ménagères</li>
+                        <li><strong>Travaux:</strong> Rénovation, peinture, remplacement équipements</li>
+                        <li><strong>Assurance:</strong> PNO, multirisques immeuble</li>
+                        <li><strong>Taxes:</strong> Taxe foncière, taxe d'habitation</li>
+                        <li><strong>Honoraires:</strong> Syndic, expert-comptable, avocat</li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

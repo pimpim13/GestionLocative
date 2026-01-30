@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Supprimer la dépense{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Confirmer la suppression
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Êtes-vous sûr de vouloir supprimer cette dépense ?</p>
+
+                    <div class="alert alert-danger">
+                        <h6 class="alert-heading">{{ depense.designation }}</h6>
+                        <hr>
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Montant TTC:</strong><br>
+                                <span class="h4">{{ depense.montant_ttc|floatformat:2 }} €</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Date:</strong><br>
+                                {{ depense.date_depense|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                        <hr>
+                        <p class="mb-2">
+                            <strong>Fournisseur:</strong> {{ depense.fournisseur }}<br>
+                            {% if depense.immeuble %}
+                            <strong>Immeuble:</strong> {{ depense.immeuble.nom }}<br>
+                            {% endif %}
+                            <strong>Type:</strong> {{ depense.type_depense }}
+                        </p>
+                    </div>
+
+                    {% if depense.repartitions.exists %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Attention:</strong> Cette dépense contient {{ depense.repartitions.count }} répartition{{ depense.repartitions.count|pluralize }} qui {{ depense.repartitions.count|pluralize:"sera,seront" }} également supprimée{{ depense.repartitions.count|pluralize }}.
+                    </div>
+                    {% endif %}
+
+                    {% if depense.facture or depense.justificatif %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Les documents attachés (factures, justificatifs) seront conservés sur le serveur mais ne seront plus accessibles.
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paiements:depense_detail' depense.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

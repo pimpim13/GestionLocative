@@ -272,7 +272,8 @@
     <!-- Boutons de navigation -->
     <div class="row">
         <div class="col-12">
-            <a href="{% url 'quittances:list' %}" class="btn btn-secondary">
+
+            <a href="{% url 'quittances:list' %}?{{ query_params }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Retour à la liste
             </a>
             <a href="{% url 'contrats:contrat_update' quittance.contrat.id %}" class="btn btn-outline-primary">

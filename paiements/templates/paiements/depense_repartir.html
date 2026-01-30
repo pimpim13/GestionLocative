@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Répartir la dépense{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- En-tête -->
+            <div class="mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'paiements:depense_liste' %}">Dépenses</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'paiements:depense_detail' depense.pk %}">{{ depense.designation }}</a></li>
+                        <li class="breadcrumb-item active">Répartition</li>
+                    </ol>
+                </nav>
+                <h1 class="h3">
+                    <i class="fas fa-share-alt"></i>
+                    Répartir la dépense
+                </h1>
+            </div>
+
+            <!-- Résumé de la dépense -->
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Dépense à répartir</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>{{ depense.designation }}</h5>
+                            <p class="mb-1">
+                                <strong>Immeuble:</strong> {{ depense.immeuble.nom }}<br>
+                                <strong>Type:</strong> {{ depense.type_depense }}<br>
+                                <strong>Date:</strong> {{ depense.date_depense|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="h2 text-primary mb-0">{{ depense.montant_ttc|floatformat:2 }} €</div>
+                            <small class="text-muted">Montant à répartir</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de répartition -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-magic"></i>
+                        Répartition automatique
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Mode de répartition -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>{{ form.mode_repartition.label }}</strong>
+                            </label>
+                            <div class="card">
+                                <div class="card-body">
+                                    {% for radio in form.mode_repartition %}
+                                    <div class="form-check mb-3">
+                                        {{ radio.tag }}
+                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                            <strong>{{ radio.choice_label }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                {% if radio.data.value == 'surface' %}
+                                                    La dépense sera répartie proportionnellement à la surface de chaque appartement.
+                                                {% elif radio.data.value == 'milliemes' %}
+                                                    La dépense sera répartie selon les milliemes de chaque appartement.
+                                                {% elif radio.data.value == 'egalitaire' %}
+                                                    La dépense sera divisée équitablement entre tous les appartements.
+                                                {% endif %}
+                                            </small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if form.mode_repartition.errors %}
+                                <div class="text-danger small">{{ form.mode_repartition.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Sélection des appartements -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>Appartements concernés</strong>
+                            </label>
+                            
+                            <!-- Option tous les appartements -->
+                            <div class="form-check mb-3">
+                                {{ form.tous_appartements }}
+                                <label class="form-check-label" for="{{ form.tous_appartements.id_for_label }}">
+                                    <strong>{{ form.tous_appartements.label }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Répartir sur tous les appartements loués de l'immeuble
+                                    </small>
+                                </label>
+                            </div>
+
+                            <!-- Liste des appartements -->
+                            <div id="appartements-list" style="display: none;">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <p class="mb-3">
+                                            <small class="text-muted">
+                                                Cochez les appartements qui doivent participer à cette dépense
+                                            </small>
+                                        </p>
+                                        {% for checkbox in form.appartements %}
+                                        <div class="form-check mb-2">
+                                            {{ checkbox.tag }}
+                                            <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                                {{ checkbox.choice_label }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if form.appartements.errors %}
+                                <div class="text-danger small mt-2">{{ form.appartements.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Informations -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Note:</strong> Cette opération va supprimer toutes les répartitions existantes 
+                            et les remplacer par la nouvelle répartition calculée automatiquement.
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'paiements:depense_detail' depense.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Répartir automatiquement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle"></i> Besoin d'aide ?
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Répartition par surface:</strong></p>
+                    <p class="small">Chaque appartement paiera un montant proportionnel à sa surface. 
+                    Idéal pour les charges d'eau, chauffage, entretien des parties communes.</p>
+                    
+                    <p class="mb-2 mt-3"><strong>Répartition par tantièmes:</strong></p>
+                    <p class="small">Basée sur les tantièmes de copropriété de chaque lot. 
+                    À utiliser pour les charges de copropriété officielles.</p>
+                    
+                    <p class="mb-2 mt-3"><strong>Répartition égalitaire:</strong></p>
+                    <p class="small">Chaque appartement paie exactement le même montant. 
+                    Utilisé pour les charges fixes comme l'entretien ascenseur, gardiennage, etc.</p>
+                    
+                    <p class="mt-3 mb-0">
+                        <a href="{% url 'paiements:repartition_create' depense.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus"></i> Ou créer une répartition manuelle
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tousCheckbox = document.getElementById('id_tous_appartements');
+    const appartementsList = document.getElementById('appartements-list');
+    
+    function toggleAppartementsList() {
+        if (tousCheckbox.checked) {
+            appartementsList.style.display = 'none';
+        } else {
+            appartementsList.style.display = 'block';
+        }
+    }
+    
+    tousCheckbox.addEventListener('change', toggleAppartementsList);
+    toggleAppartementsList(); // Initial state
+});
+</script>
+{% endblock %}
